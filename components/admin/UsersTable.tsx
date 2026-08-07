@@ -17,17 +17,26 @@ export function UsersTable({ users }: { users: AdminUser[] }) {
 
   function toggleRole(user: AdminUser) {
     startTransition(async () => {
-      await updateUserRole({ userId: user.id, role: user.role === "ADMIN" ? "MEMBRO" : "ADMIN" });
-      router.refresh();
+      try {
+        await updateUserRole({ userId: user.id, role: user.role === "ADMIN" ? "MEMBRO" : "ADMIN" });
+        toast.success("Papel do usuário atualizado");
+        router.refresh();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erro ao atualizar papel do usuário");
+      }
     });
   }
 
   function deactivate(user: AdminUser) {
     if (!confirm(`Desativar ${user.name}?`)) return;
     startTransition(async () => {
-      await deactivateUser(user.id);
-      toast.success("Usuário desativado");
-      router.refresh();
+      try {
+        await deactivateUser(user.id);
+        toast.success("Usuário desativado");
+        router.refresh();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erro ao desativar usuário");
+      }
     });
   }
 

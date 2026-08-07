@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { getPlaylist, publishPlaylist } from "@/services/playlist.actions";
+import { getPlaylist } from "@/services/playlist.actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShareSheet } from "@/components/share/ShareSheet";
+import { PublishPlaylistButton } from "@/components/playlist/PublishPlaylistButton";
 
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -52,13 +53,7 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
               nativeButton={false}
               render={<Link href={`/playlists/${playlist.id}/edit`}>Editar</Link>}
             />
-            {playlist.visibility === "DRAFT" && (
-              <form action={async () => { "use server"; await publishPlaylist(playlist.id); }}>
-                <Button type="submit" variant="outline" size="sm">
-                  Publicar
-                </Button>
-              </form>
-            )}
+            {playlist.visibility === "DRAFT" && <PublishPlaylistButton playlistId={playlist.id} />}
           </>
         )}
       </div>

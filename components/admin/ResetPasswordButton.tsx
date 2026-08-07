@@ -29,7 +29,9 @@ export function ResetPasswordButton({ userId, userName }: { userId: string; user
         setOpen(false);
         setNewPassword("");
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao redefinir senha");
+        const message = err instanceof Error ? err.message : "Erro ao redefinir senha";
+        setError(message);
+        toast.error(message);
       }
     });
   }

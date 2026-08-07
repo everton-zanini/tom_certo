@@ -13,6 +13,7 @@ import {
 import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, ChevronUp, GripVertical, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -101,8 +102,12 @@ export function PlaylistBuilder({
   function persistOrder(next: PlaylistBuilderSong[]) {
     setItems(next);
     startTransition(async () => {
-      await reorderPlaylistSongs(playlistId, next.map((i) => i.songId));
-      router.refresh();
+      try {
+        await reorderPlaylistSongs(playlistId, next.map((i) => i.songId));
+        router.refresh();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erro ao reordenar músicas");
+      }
     });
   }
 
@@ -140,12 +145,24 @@ export function PlaylistBuilder({
                 onRemove={() => {
                   setItems((prev) => prev.filter((i) => i.songId !== item.songId));
                   startTransition(async () => {
-                    await removeSongFromPlaylist(playlistId, item.songId);
-                    router.refresh();
+                    try {
+                      await removeSongFromPlaylist(playlistId, item.songId);
+                      toast.success("Música removida do repertório");
+                      router.refresh();
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Erro ao remover música");
+                    }
                   });
                 }}
                 onNotesChange={(notas) => {
-                  startTransition(() => updatePlaylistSongNotes({ playlistId, songId: item.songId, notas }));
+                  startTransition(async () => {
+                    try {
+                      await updatePlaylistSongNotes({ playlistId, songId: item.songId, notas });
+                      toast.success("Observação salva");
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Erro ao salvar observação");
+                    }
+                  });
                 }}
               />
             ))}

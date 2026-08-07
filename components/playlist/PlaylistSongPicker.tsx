@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -28,8 +29,13 @@ export function PlaylistSongPicker({
 
   function add(songId: string) {
     startTransition(async () => {
-      await addSongToPlaylist(playlistId, songId);
-      onAdded();
+      try {
+        await addSongToPlaylist(playlistId, songId);
+        toast.success("Música adicionada ao repertório");
+        onAdded();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Erro ao adicionar música");
+      }
     });
   }
 
