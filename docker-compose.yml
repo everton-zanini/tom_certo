@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cifras
+      POSTGRES_PASSWORD: cifras
+      POSTGRES_DB: cifras
+    ports:
+      - "5432:5432"
+    volumes:
+      - cifras_pgdata:/var/lib/postgresql/data
+
+volumes:
+  cifras_pgdata:
