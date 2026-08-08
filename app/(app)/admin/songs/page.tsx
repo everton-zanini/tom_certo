@@ -10,7 +10,15 @@ export default async function AdminSongsPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Músicas</h1>
-        <Button size="sm" nativeButton={false} render={<Link href="/songs/new">Nova música</Link>} />
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            nativeButton={false}
+            render={<Link href="/songs/import">Importar</Link>}
+          />
+          <Button size="sm" nativeButton={false} render={<Link href="/songs/new">Nova música</Link>} />
+        </div>
       </div>
       <div className="flex flex-col divide-y rounded-md border">
         {songs.map((song) => (

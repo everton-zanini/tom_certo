@@ -106,11 +106,19 @@ export function SongForm({
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="capo">Capotraste</Label>
-          <Input id="capo" type="number" {...register("capo", { valueAsNumber: true })} />
+          <Input
+            id="capo"
+            type="number"
+            {...register("capo", { setValueAs: (v) => (v === "" ? undefined : Number(v)) })}
+          />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="bpm">BPM</Label>
-          <Input id="bpm" type="number" {...register("bpm", { valueAsNumber: true })} />
+          <Input
+            id="bpm"
+            type="number"
+            {...register("bpm", { setValueAs: (v) => (v === "" ? undefined : Number(v)) })}
+          />
         </div>
         <div className="flex flex-col gap-2 sm:col-span-2">
           <Label htmlFor="linkYoutube">Link do YouTube</Label>

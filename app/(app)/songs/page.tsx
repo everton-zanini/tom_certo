@@ -12,7 +12,15 @@ export default async function SongsPage() {
       <div className="flex items-center justify-between p-4 pb-0">
         <h1 className="text-xl font-semibold">Músicas</h1>
         {session?.user?.role === "ADMIN" && (
-          <Button size="sm" nativeButton={false} render={<Link href="/songs/new">Nova música</Link>} />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/songs/import">Importar</Link>}
+            />
+            <Button size="sm" nativeButton={false} render={<Link href="/songs/new">Nova música</Link>} />
+          </div>
         )}
       </div>
       <SongLibrary songs={songs} />
