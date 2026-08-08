@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Music, Presentation } from "lucide-react";
 import { ChordSheet } from "@/components/song/ChordSheet";
 import { TransposeControl } from "@/components/song/TransposeControl";
 import { FontSizeControl } from "@/components/song/FontSizeControl";
@@ -36,6 +36,7 @@ export function SongViewer({
 }) {
   const [fontSize, setFontSize] = useState(18);
   const [transposeSteps, setTransposeSteps] = useState(0);
+  const [projectionMode, setProjectionMode] = useState(false);
   const [teleprompterPlaying, setTeleprompterPlaying] = useState(false);
   const [teleprompterSpeed, setTeleprompterSpeed] = useState(40);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -56,7 +57,17 @@ export function SongViewer({
           <p className="text-sm text-muted-foreground">{song.artista}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <TransposeControl currentKey={displayKey} onChange={(d) => setTransposeSteps((s) => s + d)} />
+          <Button
+            variant={projectionMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setProjectionMode((p) => !p)}
+          >
+            {projectionMode ? <Music className="size-4" /> : <Presentation className="size-4" />}
+            Projeção
+          </Button>
+          {!projectionMode && (
+            <TransposeControl currentKey={displayKey} onChange={(d) => setTransposeSteps((s) => s + d)} />
+          )}
           <FontSizeControl fontSize={fontSize} onChange={setFontSize} />
           <TeleprompterControls
             playing={teleprompterPlaying}
@@ -114,7 +125,7 @@ export function SongViewer({
         className="flex-1 overflow-y-auto bg-background p-4"
         style={{ ["--cifra-font-size" as string]: `${fontSize}px` }}
       >
-        <ChordSheet lines={displayLines} />
+        <ChordSheet lines={displayLines} showChords={!projectionMode} />
       </div>
     </div>
   );
