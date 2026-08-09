@@ -99,18 +99,47 @@ export async function publishPlaylist(id: string) {
   return playlist;
 }
 
-export async function listPlaylists(filters?: { upcoming?: boolean }) {
+const PLAYLISTS_PAGE_SIZE = 12;
+
+export async function listPlaylists(filters?: {
+  upcoming?: boolean;
+  date?: Date;
+  page?: number;
+}) {
   const session = await requireAuth();
   const isAdmin = session.user.role === "ADMIN";
+  const page = filters?.page && filters.page > 0 ? filters.page : 1;
 
-  return prisma.playlist.findMany({
-    where: {
-      data: filters?.upcoming ? { gte: new Date(new Date().toDateString()) } : undefined,
-      OR: isAdmin ? undefined : [{ visibility: "PUBLISHED" }, { responsavelId: session.user.id }],
-    },
-    orderBy: { data: "asc" },
-    include: { _count: { select: { songs: true } } },
-  });
+  const dateRange = filters?.date
+    ? (() => {
+        const start = new Date(filters.date!.toDateString());
+        return { gte: start, lt: new Date(start.getTime() + 24 * 60 * 60 * 1000) };
+      })()
+    : filters?.upcoming
+      ? { gte: new Date(new Date().toDateString()) }
+      : undefined;
+
+  const where = {
+    data: dateRange,
+    OR: isAdmin ? undefined : [{ visibility: "PUBLISHED" as const }, { responsavelId: session.user.id }],
+  };
+
+  const [playlists, total] = await Promise.all([
+    prisma.playlist.findMany({
+      where,
+      orderBy: { data: "desc" },
+      include: { _count: { select: { songs: true } } },
+      skip: (page - 1) * PLAYLISTS_PAGE_SIZE,
+      take: PLAYLISTS_PAGE_SIZE,
+    }),
+    prisma.playlist.count({ where }),
+  ]);
+
+  return {
+    playlists,
+    page,
+    totalPages: Math.max(1, Math.ceil(total / PLAYLISTS_PAGE_SIZE)),
+  };
 }
 
 export async function getPlaylist(id: string) {
