@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { LogoutButton } from "@/components/nav/LogoutButton";
 import { ThemeToggle } from "@/components/nav/ThemeToggle";
+import { InstallAppButton } from "@/components/nav/InstallAppButton";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -19,6 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Link href="/account" className="text-muted-foreground hover:text-foreground">
             {session?.user?.name}
           </Link>
+          <InstallAppButton />
           <ThemeToggle />
           <LogoutButton />
         </nav>
