@@ -39,3 +39,27 @@ export async function listFavoriteSongIds() {
   });
   return favorites.map((f) => f.songId);
 }
+
+/** Full song data for the favorited songs, for rendering SongCard on the dashboard. */
+export async function listFavoriteSongs() {
+  const session = await requireAuth();
+  const favorites = await prisma.favorite.findMany({
+    where: { userId: session.user.id },
+    orderBy: { createdAt: "desc" },
+    select: {
+      song: {
+        select: {
+          id: true,
+          titulo: true,
+          artista: true,
+          ministerio: true,
+          tomAtual: true,
+          genero: true,
+          linkYoutube: true,
+          tags: { select: { tag: { select: { nome: true } } } },
+        },
+      },
+    },
+  });
+  return favorites.map((f) => f.song);
+}

@@ -127,7 +127,7 @@ export async function listPlaylists(filters?: {
   const [playlists, total] = await Promise.all([
     prisma.playlist.findMany({
       where,
-      orderBy: { data: "desc" },
+      orderBy: { data: filters?.upcoming ? "asc" : "desc" },
       include: { _count: { select: { songs: true } } },
       skip: (page - 1) * PLAYLISTS_PAGE_SIZE,
       take: PLAYLISTS_PAGE_SIZE,
