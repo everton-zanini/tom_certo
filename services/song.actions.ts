@@ -7,6 +7,7 @@ import { requireAuth, requireRole } from "@/lib/authz";
 import { songSchema, type SongFilters } from "@/types/schemas/song.schema";
 import { parseCifra } from "@/lib/cifra/parser";
 import { transposeLines, semitoneDiff } from "@/lib/cifra/transpose";
+import { extractCfsEntries, inflateCfsEntry, parseCfsText } from "@/lib/cifra/cfs-import";
 
 function tagConnections(tags: string[]) {
   return tags.map((nome) => ({
@@ -37,6 +38,71 @@ export async function createSong(input: unknown) {
 
   revalidatePath("/songs");
   return song;
+}
+
+export type BulkImportResult = {
+  imported: number;
+  skipped: { arquivo: string; motivo: string }[];
+};
+
+/** Bulk-imports a backup .zip of .cfs cifras, skipping entries that fail to parse or already exist. */
+export async function bulkImportSongsFromZip(formData: FormData): Promise<BulkImportResult> {
+  await requireRole("ADMIN");
+
+  const file = formData.get("file");
+  if (!(file instanceof File)) throw new Error("Nenhum arquivo enviado");
+
+  const zipBuffer = Buffer.from(await file.arrayBuffer());
+  const entries = await extractCfsEntries(zipBuffer);
+
+  const result: BulkImportResult = { imported: 0, skipped: [] };
+
+  for (const entry of entries) {
+    try {
+      const parsed = parseCfsText(inflateCfsEntry(entry.buffer), entry.name);
+      if ("error" in parsed) {
+        result.skipped.push({ arquivo: entry.name, motivo: parsed.error });
+        continue;
+      }
+
+      const existing = await prisma.song.findFirst({
+        where: { titulo: parsed.titulo, artista: parsed.artista || null },
+        select: { id: true },
+      });
+      if (existing) {
+        result.skipped.push({ arquivo: entry.name, motivo: "já existente" });
+        continue;
+      }
+
+      const data = songSchema.parse({
+        titulo: parsed.titulo,
+        artista: parsed.artista,
+        tomOriginal: parsed.tomOriginal,
+        observacoes: parsed.observacoes,
+        cifra: parsed.cifra,
+      });
+
+      await prisma.song.create({
+        data: {
+          titulo: data.titulo,
+          artista: data.artista || null,
+          tomOriginal: data.tomOriginal,
+          tomAtual: data.tomOriginal,
+          observacoes: data.observacoes || null,
+          cifra: data.cifra,
+        },
+      });
+      result.imported++;
+    } catch (error) {
+      result.skipped.push({
+        arquivo: entry.name,
+        motivo: error instanceof Error ? error.message : "erro desconhecido",
+      });
+    }
+  }
+
+  if (result.imported > 0) revalidatePath("/songs");
+  return result;
 }
 
 export async function updateSong(id: string, input: unknown) {
