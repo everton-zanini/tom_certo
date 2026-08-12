@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { bulkImportSongsFromZip, type BulkImportResult } from "@/services/song.actions";
 import { Button } from "@/components/ui/button";
 
@@ -32,8 +33,12 @@ export function BulkImportSongsForm() {
 
   if (isPending) {
     return (
-      <div className="rounded-md border p-10 text-center text-sm text-muted-foreground">
-        Importando {fileName}...
+      <div className="flex flex-col items-center gap-4 rounded-md border p-10 text-center text-sm text-muted-foreground">
+        <Loader2 className="size-6 animate-spin" />
+        <span>Importando {fileName}...</span>
+        <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+          <div className="h-full w-1/3 rounded-full bg-primary animate-[indeterminate-bar_1.2s_ease-in-out_infinite]" />
+        </div>
       </div>
     );
   }
