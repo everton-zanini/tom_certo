@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { addSongToPlaylist } from "@/services/playlist.actions";
+import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
 export type PickableSong = { id: string; titulo: string; artista: string | null };
 
@@ -19,6 +20,7 @@ export function PlaylistSongPicker({
   availableSongs: PickableSong[];
   onAdded: () => void;
 }) {
+  const { runWithOverlay } = useLoadingOverlay();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -29,13 +31,15 @@ export function PlaylistSongPicker({
 
   function add(songId: string) {
     startTransition(async () => {
-      try {
-        await addSongToPlaylist(playlistId, songId);
-        toast.success("Música adicionada ao repertório");
-        onAdded();
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao adicionar música");
-      }
+      await runWithOverlay(async () => {
+        try {
+          await addSongToPlaylist(playlistId, songId);
+          toast.success("Música adicionada ao repertório");
+          onAdded();
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "Erro ao adicionar música");
+        }
+      }, "Adicionando...");
     });
   }
 

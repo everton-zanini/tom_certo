@@ -10,6 +10,7 @@ import { changeOwnPassword } from "@/services/user.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
 const formSchema = changePasswordSchema
   .extend({ confirmPassword: z.string().min(1, "Confirme a nova senha") })
@@ -20,6 +21,7 @@ const formSchema = changePasswordSchema
 type FormValues = z.infer<typeof formSchema>;
 
 export function ChangePasswordForm() {
+  const { runWithOverlay } = useLoadingOverlay();
   const [isPending, startTransition] = useTransition();
   const {
     register,
@@ -33,16 +35,18 @@ export function ChangePasswordForm() {
 
   function onSubmit(values: FormValues) {
     startTransition(async () => {
-      try {
-        await changeOwnPassword({
-          currentPassword: values.currentPassword,
-          newPassword: values.newPassword,
-        });
-        toast.success("Senha alterada com sucesso");
-        reset();
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao alterar senha");
-      }
+      await runWithOverlay(async () => {
+        try {
+          await changeOwnPassword({
+            currentPassword: values.currentPassword,
+            newPassword: values.newPassword,
+          });
+          toast.success("Senha alterada com sucesso");
+          reset();
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "Erro ao alterar senha");
+        }
+      }, "Salvando...");
     });
   }
 

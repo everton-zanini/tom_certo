@@ -6,21 +6,25 @@ import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteSong } from "@/services/song.actions";
+import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
 export function DeleteSongButton({ songId }: { songId: string }) {
+  const { runWithOverlay } = useLoadingOverlay();
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   function handleDelete() {
     if (!confirm("Excluir esta música? Esta ação não pode ser desfeita.")) return;
     startTransition(async () => {
-      try {
-        await deleteSong(songId);
-        toast.success("Música excluída");
-        router.refresh();
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao excluir música");
-      }
+      await runWithOverlay(async () => {
+        try {
+          await deleteSong(songId);
+          toast.success("Música excluída");
+          router.refresh();
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "Erro ao excluir música");
+        }
+      }, "Excluindo...");
     });
   }
 

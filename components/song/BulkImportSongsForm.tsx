@@ -2,12 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { bulkImportSongsFromZip, type BulkImportResult } from "@/services/song.actions";
 import { Button } from "@/components/ui/button";
+import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
 export function BulkImportSongsForm() {
-  const [isPending, startTransition] = useTransition();
+  const { runWithOverlay } = useLoadingOverlay();
+  const [, startTransition] = useTransition();
   const [result, setResult] = useState<BulkImportResult | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
 
@@ -17,30 +18,20 @@ export function BulkImportSongsForm() {
     formData.set("file", file);
 
     startTransition(async () => {
-      try {
-        const outcome = await bulkImportSongsFromZip(formData);
-        setResult(outcome);
-        if (outcome.imported > 0) {
-          toast.success(`${outcome.imported} música(s) importada(s)`);
-        } else {
-          toast.error("Nenhuma música nova foi importada");
+      await runWithOverlay(async () => {
+        try {
+          const outcome = await bulkImportSongsFromZip(formData);
+          setResult(outcome);
+          if (outcome.imported > 0) {
+            toast.success(`${outcome.imported} música(s) importada(s)`);
+          } else {
+            toast.error("Nenhuma música nova foi importada");
+          }
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "Não foi possível importar o arquivo");
         }
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Não foi possível importar o arquivo");
-      }
+      }, `Importando ${file.name}...`);
     });
-  }
-
-  if (isPending) {
-    return (
-      <div className="flex flex-col items-center gap-4 rounded-md border p-10 text-center text-sm text-muted-foreground">
-        <Loader2 className="size-6 animate-spin" />
-        <span>Importando {fileName}...</span>
-        <div className="h-2 w-full max-w-xs overflow-hidden rounded-full bg-muted">
-          <div className="h-full w-1/3 rounded-full bg-primary animate-[indeterminate-bar_1.2s_ease-in-out_infinite]" />
-        </div>
-      </div>
-    );
   }
 
   if (result) {

@@ -1,13 +1,22 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { authenticate } from "@/services/auth.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
 export function LoginForm() {
+  const { show, hide } = useLoadingOverlay();
   const [errorMessage, formAction, isPending] = useActionState(authenticate, undefined);
+
+  useEffect(() => {
+    if (isPending) {
+      show("Entrando...");
+      return hide;
+    }
+  }, [isPending, show, hide]);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">

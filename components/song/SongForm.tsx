@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
 const formSchema = songSchema
   .omit({ tags: true, capo: true, bpm: true })
@@ -30,6 +31,7 @@ export function SongForm({
   defaultValues?: Partial<SongInput>;
 }) {
   const router = useRouter();
+  const { runWithOverlay } = useLoadingOverlay();
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -65,13 +67,15 @@ export function SongForm({
     };
 
     startTransition(async () => {
-      try {
-        const song = songId ? await updateSong(songId, payload) : await createSong(payload);
-        toast.success("Música salva");
-        router.push(`/songs/${song.id}`);
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao salvar música");
-      }
+      await runWithOverlay(async () => {
+        try {
+          const song = songId ? await updateSong(songId, payload) : await createSong(payload);
+          toast.success("Música salva");
+          router.push(`/songs/${song.id}`);
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "Erro ao salvar música");
+        }
+      }, "Salvando...");
     });
   }
 

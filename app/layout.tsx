@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Roboto, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { LoadingOverlayProvider } from "@/components/providers/loading-overlay-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -41,8 +42,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-          <Toaster />
+          <LoadingOverlayProvider>
+            {children}
+            <Toaster />
+          </LoadingOverlayProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
 function toDateInputValue(date?: Date): string {
   const d = date ?? new Date();
@@ -45,6 +46,7 @@ export function PlaylistForm({
   defaultValues?: Partial<PlaylistInput>;
 }) {
   const router = useRouter();
+  const { runWithOverlay } = useLoadingOverlay();
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -67,15 +69,17 @@ export function PlaylistForm({
     const payload: PlaylistInput = { ...rest, data: combineDateTime(data, horario ?? "00:00") };
 
     startTransition(async () => {
-      try {
-        const playlist = playlistId
-          ? await updatePlaylist(playlistId, payload)
-          : await createPlaylist(payload);
-        toast.success("Repertório salvo");
-        router.push(`/playlists/${playlist.id}/edit`);
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao salvar repertório");
-      }
+      await runWithOverlay(async () => {
+        try {
+          const playlist = playlistId
+            ? await updatePlaylist(playlistId, payload)
+            : await createPlaylist(payload);
+          toast.success("Repertório salvo");
+          router.push(`/playlists/${playlist.id}/edit`);
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "Erro ao salvar repertório");
+        }
+      }, "Salvando...");
     });
   }
 
