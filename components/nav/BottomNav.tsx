@@ -19,7 +19,7 @@ export function BottomNav({ isAdmin }: { isAdmin: boolean }) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 flex border-t bg-sidebar text-sidebar-foreground md:hidden">
       {items
-        .filter((item) => !item.adminOnly || isAdmin)
+        .filter((item) => !("adminOnly" in item && item.adminOnly) || isAdmin)
         .map(({ href, label, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
 
