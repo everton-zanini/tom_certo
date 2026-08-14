@@ -1,69 +1,43 @@
 "use client";
 
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { deactivateUser, updateUserRole } from "@/services/user.actions";
-import { ResetPasswordButton } from "@/components/admin/ResetPasswordButton";
+import { UserOptionsDialog } from "@/components/admin/UserOptionsDialog";
 import type { Role } from "@prisma/client";
 
 export type AdminUser = { id: string; name: string; email: string; role: Role; active: boolean };
 
 export function UsersTable({ users }: { users: AdminUser[] }) {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
-
-  function toggleRole(user: AdminUser) {
-    startTransition(async () => {
-      try {
-        await updateUserRole({ userId: user.id, role: user.role === "ADMIN" ? "MEMBRO" : "ADMIN" });
-        toast.success("Papel do usuário atualizado");
-        router.refresh();
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao atualizar papel do usuário");
-      }
-    });
-  }
-
-  function deactivate(user: AdminUser) {
-    if (!confirm(`Desativar ${user.name}?`)) return;
-    startTransition(async () => {
-      try {
-        await deactivateUser(user.id);
-        toast.success("Usuário desativado");
-        router.refresh();
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao desativar usuário");
-      }
-    });
-  }
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const selectedUser = users.find((user) => user.id === selectedUserId);
 
   return (
     <div className="flex flex-col divide-y rounded-md border">
       {users.map((user) => (
-        <div key={user.id} className="flex items-center justify-between p-3">
-          <div>
-            <p className="font-medium">
+        <button
+          key={user.id}
+          type="button"
+          onClick={() => setSelectedUserId(user.id)}
+          className="flex items-center justify-between gap-2 p-3 text-left hover:bg-muted/50"
+        >
+          <div className="min-w-0">
+            <p className="truncate font-medium">
               {user.name} {!user.active && <Badge variant="outline">Inativo</Badge>}
             </p>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+            <p className="truncate text-sm text-muted-foreground">{user.email}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Badge variant="secondary">{user.role === "ADMIN" ? "Administrador" : "Membro"}</Badge>
-            <Button variant="outline" size="sm" disabled={isPending} onClick={() => toggleRole(user)}>
-              Tornar {user.role === "ADMIN" ? "membro" : "admin"}
-            </Button>
-            <ResetPasswordButton userId={user.id} userName={user.name} />
-            {user.active && (
-              <Button variant="ghost" size="sm" disabled={isPending} onClick={() => deactivate(user)}>
-                Desativar
-              </Button>
-            )}
+            <ChevronRight className="size-4 text-muted-foreground" />
           </div>
-        </div>
+        </button>
       ))}
+      <UserOptionsDialog
+        user={selectedUser}
+        open={selectedUserId !== null}
+        onOpenChange={(open) => !open && setSelectedUserId(null)}
+      />
     </div>
   );
 }

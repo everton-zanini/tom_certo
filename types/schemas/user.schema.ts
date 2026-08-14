@@ -14,6 +14,11 @@ export const updateUserRoleSchema = z.object({
   role: z.enum(["ADMIN", "MEMBRO"]),
 });
 
+export const updateUserActiveSchema = z.object({
+  userId: z.string().min(1),
+  active: z.boolean(),
+});
+
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Informe a senha atual"),
   newPassword: z.string().min(8, "Senha deve ter ao menos 8 caracteres"),

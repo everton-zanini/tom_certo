@@ -9,6 +9,7 @@ import {
   changePasswordSchema,
   createUserSchema,
   resetPasswordSchema,
+  updateUserActiveSchema,
   updateUserRoleSchema,
 } from "@/types/schemas/user.schema";
 
@@ -47,9 +48,10 @@ export async function updateUserRole(input: unknown) {
   return user;
 }
 
-export async function deactivateUser(userId: string) {
+export async function updateUserActive(input: unknown) {
   await requireRole("ADMIN");
-  const user = await prisma.user.update({ where: { id: userId }, data: { active: false } });
+  const { userId, active } = updateUserActiveSchema.parse(input);
+  const user = await prisma.user.update({ where: { id: userId }, data: { active } });
   revalidatePath("/admin/users");
   return user;
 }
