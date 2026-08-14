@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { LogoutButton } from "@/components/nav/LogoutButton";
@@ -12,7 +13,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex flex-1 flex-col">
       <header className="flex items-center justify-between border-b px-4 py-3">
-        <Link href="/" className="font-semibold">
+        <Link href="/" className="flex items-center gap-2 font-semibold">
+          <Image src="/tom_certo_icone.png" alt="" width={28} height={28} className="rounded" />
           Tom Certo
         </Link>
         <nav className="hidden items-center gap-4 text-sm md:flex">

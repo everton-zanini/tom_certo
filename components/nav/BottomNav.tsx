@@ -29,7 +29,7 @@ export function BottomNav({ isAdmin }: { isAdmin: boolean }) {
               href={href}
               className={cn(
                 "flex flex-1 flex-col items-center gap-0.5 py-2 text-[0.65rem]",
-                active ? "text-sidebar-primary" : "text-sidebar-foreground/60"
+                active ? "text-green-600 dark:text-green-400" : "text-sidebar-foreground/60"
               )}
             >
               <Icon className="size-5" />
