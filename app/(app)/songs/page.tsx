@@ -1,11 +1,15 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { listSongs } from "@/services/song.actions";
+import { listDistinctArtistas, listSongsPage } from "@/services/song.actions";
 import { SongLibrary } from "@/components/song/SongLibrary";
 import { Button } from "@/components/ui/button";
 
 export default async function SongsPage() {
-  const [session, songs] = await Promise.all([auth(), listSongs()]);
+  const [session, firstPage, artistas] = await Promise.all([
+    auth(),
+    listSongsPage({ page: 1 }),
+    listDistinctArtistas(),
+  ]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -23,7 +27,7 @@ export default async function SongsPage() {
           </div>
         )}
       </div>
-      <SongLibrary songs={songs} />
+      <SongLibrary initialSongs={firstPage.songs} initialHasMore={firstPage.hasMore} artistas={artistas} />
     </div>
   );
 }

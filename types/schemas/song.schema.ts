@@ -28,3 +28,9 @@ export const songFiltersSchema = z.object({
 });
 
 export type SongFilters = z.infer<typeof songFiltersSchema>;
+
+export const songsPageInputSchema = songFiltersSchema.extend({
+  page: z.coerce.number().int().min(1).default(1),
+});
+
+export type SongsPageInput = z.infer<typeof songsPageInputSchema>;

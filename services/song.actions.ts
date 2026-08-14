@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireRole } from "@/lib/authz";
-import { songSchema, type SongFilters } from "@/types/schemas/song.schema";
+import { songSchema, songsPageInputSchema, type SongFilters } from "@/types/schemas/song.schema";
 import { parseCifra } from "@/lib/cifra/parser";
 import { transposeLines, semitoneDiff } from "@/lib/cifra/transpose";
 import { extractCfsEntries, inflateCfsEntry, parseCfsText } from "@/lib/cifra/cfs-import";
@@ -178,6 +178,61 @@ export async function listSongs(filters?: SongFilters) {
     },
     orderBy: { titulo: "asc" },
   });
+}
+
+const SONGS_PAGE_SIZE = 20;
+
+/** Paginated + server-side search (título, artista e cifra) for the public songs library screen. */
+export async function listSongsPage(input?: unknown) {
+  await requireAuth();
+  const { query, artista, ministerio, tom, genero, page } = songsPageInputSchema.parse(input ?? {});
+  const q = query?.trim();
+
+  const where: Prisma.SongWhereInput = {
+    artista: artista || undefined,
+    ministerio: ministerio || undefined,
+    tomAtual: tom || undefined,
+    genero: genero || undefined,
+    ...(q
+      ? {
+          OR: [
+            { titulo: { contains: q, mode: "insensitive" } },
+            { artista: { contains: q, mode: "insensitive" } },
+            { cifra: { contains: q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
+  const results = await prisma.song.findMany({
+    where,
+    select: {
+      id: true,
+      titulo: true,
+      artista: true,
+      ministerio: true,
+      tomAtual: true,
+      genero: true,
+      linkYoutube: true,
+      tags: { select: { tag: { select: { nome: true } } } },
+    },
+    orderBy: { titulo: "asc" },
+    skip: (page - 1) * SONGS_PAGE_SIZE,
+    take: SONGS_PAGE_SIZE + 1,
+  });
+
+  return { songs: results.slice(0, SONGS_PAGE_SIZE), hasMore: results.length > SONGS_PAGE_SIZE };
+}
+
+export async function listDistinctArtistas() {
+  await requireAuth();
+  const rows = await prisma.song.findMany({
+    where: { artista: { not: null } },
+    distinct: ["artista"],
+    select: { artista: true },
+    orderBy: { artista: "asc" },
+  });
+  return rows.map((r) => r.artista as string);
 }
 
 /** Ephemeral preview — does not persist, used by the +/- semitone controls in the viewer. */
