@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Music, Presentation } from "lucide-react";
+import { ChevronLeft, ChevronRight, Minimize, Music, Presentation } from "lucide-react";
 import { ChordSheet } from "@/components/song/ChordSheet";
 import { TransposeControl } from "@/components/song/TransposeControl";
 import { FontSizeControl } from "@/components/song/FontSizeControl";
@@ -39,6 +39,7 @@ export function SongViewer({
   const [projectionMode, setProjectionMode] = useState(false);
   const [teleprompterPlaying, setTeleprompterPlaying] = useState(false);
   const [teleprompterSpeed, setTeleprompterSpeed] = useState(40);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const displayLines = useMemo(
@@ -48,6 +49,23 @@ export function SongViewer({
   const displayKey = transposeChord(song.tomAtual, transposeSteps);
 
   useTeleprompter(containerRef, teleprompterSpeed, teleprompterPlaying);
+
+  useEffect(() => {
+    function handleFullscreenChange() {
+      setIsFullscreen(document.fullscreenElement === containerRef.current);
+    }
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  async function toggleFullscreen() {
+    if (!document.fullscreenEnabled || !containerRef.current) return;
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    } else {
+      await containerRef.current.requestFullscreen();
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col">
@@ -77,7 +95,7 @@ export function SongViewer({
           />
           {song.linkYoutube && <YouTubeButton url={song.linkYoutube} />}
           <CopyLinkButton />
-          <FullscreenToggle targetRef={containerRef} />
+          <FullscreenToggle isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
           <FavoriteButton songId={song.id} initialFavorited={favorited} />
         </div>
       </div>
@@ -126,6 +144,55 @@ export function SongViewer({
         style={{ ["--cifra-font-size" as string]: `${fontSize}px` }}
       >
         <ChordSheet lines={displayLines} showChords={!projectionMode} />
+
+        {isFullscreen && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-x-0 bottom-6 z-50 flex justify-center"
+          >
+            <div className="flex items-center gap-1 rounded-full border bg-background/95 p-1 shadow-lg backdrop-blur">
+              {performNav &&
+                (performNav.prevHref ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    nativeButton={false}
+                    aria-label="Música anterior"
+                    render={
+                      <Link href={performNav.prevHref}>
+                        <ChevronLeft className="size-4" />
+                      </Link>
+                    }
+                  />
+                ) : (
+                  <Button variant="ghost" size="icon" disabled aria-label="Música anterior">
+                    <ChevronLeft className="size-4" />
+                  </Button>
+                ))}
+              <Button variant="ghost" size="icon" onClick={toggleFullscreen} aria-label="Sair da tela cheia">
+                <Minimize className="size-4" />
+              </Button>
+              {performNav &&
+                (performNav.nextHref ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    nativeButton={false}
+                    aria-label="Próxima música"
+                    render={
+                      <Link href={performNav.nextHref}>
+                        <ChevronRight className="size-4" />
+                      </Link>
+                    }
+                  />
+                ) : (
+                  <Button variant="ghost" size="icon" disabled aria-label="Próxima música">
+                    <ChevronRight className="size-4" />
+                  </Button>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
