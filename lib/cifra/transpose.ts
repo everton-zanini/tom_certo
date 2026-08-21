@@ -48,7 +48,7 @@ export function transposeChord(chord: string, semitones: number): string {
 export function transposeLines(lines: ParsedLine[], semitones: number): ParsedLine[] {
   if (semitones === 0) return lines;
   return lines.map((line) => ({
-    lyrics: line.lyrics,
+    ...line,
     chords: line.chords.map((chord) => ({
       ...chord,
       text: transposeChord(chord.text, semitones),

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isChordLine, isChordToken, parseCifra } from "./parser";
+import { extractObservacao, isChordLine, isChordToken, parseCifra } from "./parser";
 
 describe("isChordToken", () => {
   it.each([
@@ -93,5 +93,48 @@ describe("parseCifra", () => {
     const raw = "Só letra, sem cifra";
     const parsed = parseCifra(raw);
     expect(parsed).toEqual([{ lyrics: "Só letra, sem cifra", chords: [] }]);
+  });
+
+  it("recognizes a standalone observation line between lyric lines", () => {
+    const raw = "Grande é o Senhor\n> Repetir com calma\nDigno de louvor";
+    const parsed = parseCifra(raw);
+    expect(parsed).toHaveLength(3);
+    expect(parsed[1]).toEqual({ lyrics: "Repetir com calma", chords: [], isObservacao: true });
+    expect(parsed[0].isObservacao).toBeUndefined();
+    expect(parsed[2].isObservacao).toBeUndefined();
+  });
+
+  it("does not swallow an observation line as the lyric under a chord line", () => {
+    const raw = "G          D\n> Repetir com calma";
+    const parsed = parseCifra(raw);
+    expect(parsed).toHaveLength(2);
+    expect(parsed[0]).toEqual({ lyrics: "", chords: [{ text: "G", column: 0 }, { text: "D", column: 11 }] });
+    expect(parsed[1]).toEqual({ lyrics: "Repetir com calma", chords: [], isObservacao: true });
+  });
+
+  it("recognizes an observation line at the very start or end of the text", () => {
+    const raw = "> Entrada só com violão\nGrande é o Senhor\n> Fim";
+    const parsed = parseCifra(raw);
+    expect(parsed).toHaveLength(3);
+    expect(parsed[0]).toEqual({ lyrics: "Entrada só com violão", chords: [], isObservacao: true });
+    expect(parsed[2]).toEqual({ lyrics: "Fim", chords: [], isObservacao: true });
+  });
+
+  it("handles a bare '>' with no text after it", () => {
+    const raw = ">";
+    const parsed = parseCifra(raw);
+    expect(parsed).toEqual([{ lyrics: "", chords: [], isObservacao: true }]);
+  });
+});
+
+describe("extractObservacao", () => {
+  it("extracts the text after '>' trimmed", () => {
+    expect(extractObservacao("> Repetir com calma")).toBe("Repetir com calma");
+    expect(extractObservacao("  >Repetir com calma  ")).toBe("Repetir com calma");
+  });
+
+  it("returns null for lines that don't start with '>'", () => {
+    expect(extractObservacao("Grande é o Senhor")).toBeNull();
+    expect(extractObservacao("G   D")).toBeNull();
   });
 });

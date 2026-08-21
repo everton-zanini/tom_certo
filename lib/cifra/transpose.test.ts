@@ -74,6 +74,15 @@ describe("transposeLines", () => {
       "|",
     ]);
   });
+
+  it("preserves isObservacao and leaves observation lines untouched", () => {
+    const raw = "G   D\nGrande é o Senhor\n> Repetir com calma";
+    const parsed = parseCifra(raw);
+    const transposed = transposeLines(parsed, 2);
+    expect(transposed[1].isObservacao).toBe(true);
+    expect(transposed[1].lyrics).toBe("Repetir com calma");
+    expect(transposed[1].chords).toEqual([]);
+  });
 });
 
 describe("semitoneDiff", () => {

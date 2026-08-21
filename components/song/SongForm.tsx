@@ -140,6 +140,10 @@ export function SongForm({
         <div className="flex flex-col gap-2 sm:col-span-2">
           <Label htmlFor="cifra">Cifra (cole o texto com acordes acima da letra)</Label>
           <Textarea id="cifra" rows={16} className="font-mono" {...register("cifra")} />
+          <p className="text-xs text-muted-foreground">
+            Para uma observação/instrução (ex: &ldquo;repetir o refrão&rdquo;), comece a linha com
+            &ldquo;&gt;&rdquo; — ela aparece destacada em azul na visualização.
+          </p>
           {errors.cifra && <p className="text-sm text-destructive">{errors.cifra.message}</p>}
         </div>
       </div>

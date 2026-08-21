@@ -1,5 +1,5 @@
 export type ChordToken = { text: string; column: number };
-export type ParsedLine = { lyrics: string; chords: ChordToken[] };
+export type ParsedLine = { lyrics: string; chords: ChordToken[]; isObservacao?: boolean };
 
 const CHORD_QUALITY =
   "maj7|maj9|maj|min7|min9|min|dim7b5|dim7|dim|aug|sus2|sus4|sus|add9|add11|m7b5|m7b9|m9|m7|m6|m11|m13|m|6|7|9|11|13|2";
@@ -38,6 +38,13 @@ function extractTokensWithColumns(line: string): ChordToken[] {
   return [...line.matchAll(/\S+/g)].map((m) => ({ text: m[0], column: m.index }));
 }
 
+/** Lines starting with ">" are musician observations/instructions, not sung lyrics. */
+export function extractObservacao(line: string): string | null {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith(">")) return null;
+  return trimmed.slice(1).trim();
+}
+
 /**
  * Parses raw monospaced cifra text (chord line directly above its lyric line,
  * as pasted from sites like Cifra Club) into a line-by-line structure that
@@ -51,10 +58,16 @@ export function parseCifra(raw: string): ParsedLine[] {
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
+    const observacao = extractObservacao(line);
+    if (observacao !== null) {
+      result.push({ lyrics: observacao, chords: [], isObservacao: true });
+      i += 1;
+      continue;
+    }
     if (isChordLine(line)) {
       const chords = extractTokensWithColumns(line);
       const next = lines[i + 1];
-      if (next !== undefined && !isChordLine(next)) {
+      if (next !== undefined && !isChordLine(next) && extractObservacao(next) === null) {
         result.push({ lyrics: next, chords });
         i += 2;
       } else {
