@@ -24,6 +24,15 @@ enum PlaylistVisibility {
   PUBLISHED
 }
 
+enum NotaCor {
+  VERMELHO
+  AMARELO
+  VERDE
+  AZUL
+  LARANJA
+  ROXO
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -153,7 +162,8 @@ model PlaylistSong {
   playlistId String
   songId     String
   ordem      Int
-  notas      String? @db.Text
+  notas      String?  @db.Text
+  cor        NotaCor?
 
   playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
   // Restrict, not Cascade: deleting a Song shouldn't silently vanish from historical setlists.

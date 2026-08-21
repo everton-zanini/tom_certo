@@ -21,6 +21,12 @@ export default async function SongsPage() {
               size="sm"
               variant="outline"
               nativeButton={false}
+              render={<Link href="/songs/notas">Notas</Link>}
+            />
+            <Button
+              size="sm"
+              variant="outline"
+              nativeButton={false}
               render={<Link href="/songs/import">Importar</Link>}
             />
             <Button size="sm" nativeButton={false} render={<Link href="/songs/new">Nova música</Link>} />

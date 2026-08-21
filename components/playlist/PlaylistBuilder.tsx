@@ -22,12 +22,16 @@ import {
   updatePlaylistSongNotes,
 } from "@/services/playlist.actions";
 import { PlaylistSongPicker, type PickableSong } from "@/components/playlist/PlaylistSongPicker";
+import { NotaColorPicker } from "@/components/playlist/NotaColorPicker";
+import { getNotaCor, type NotaCorValue } from "@/lib/nota-colors";
+import { cn } from "@/lib/utils";
 
 export type PlaylistBuilderSong = {
   songId: string;
   titulo: string;
   artista: string | null;
   notas: string | null;
+  cor: NotaCorValue | null;
 };
 
 function Row({
@@ -36,20 +40,27 @@ function Row({
   isLast,
   onMove,
   onRemove,
-  onNotesChange,
+  onNoteChange,
 }: {
   item: PlaylistBuilderSong;
   isFirst: boolean;
   isLast: boolean;
   onMove: (delta: number) => void;
   onRemove: () => void;
-  onNotesChange: (notas: string) => void;
+  onNoteChange: (notas: string, cor: NotaCorValue | null) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.songId });
   const style = { transform: CSS.Transform.toString(transform), transition };
+  const [notas, setNotas] = useState(item.notas ?? "");
+  const [cor, setCor] = useState<NotaCorValue | null>(item.cor);
+  const corInfo = getNotaCor(cor);
 
   return (
-    <div ref={setNodeRef} style={style} className="flex flex-col gap-2 rounded-md border p-2">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn("flex flex-col gap-2 rounded-md border p-2", corInfo && "border-l-4", corInfo?.border)}
+    >
       <div className="flex items-center gap-2">
         <button
           {...attributes}
@@ -75,9 +86,17 @@ function Row({
       </div>
       <Textarea
         placeholder="Observações (ex: repetir refrão, ministrar)"
-        defaultValue={item.notas ?? ""}
+        value={notas}
         rows={1}
-        onBlur={(e) => onNotesChange(e.target.value)}
+        onChange={(e) => setNotas(e.target.value)}
+        onBlur={() => onNoteChange(notas, cor)}
+      />
+      <NotaColorPicker
+        value={cor}
+        onChange={(next) => {
+          setCor(next);
+          onNoteChange(notas, next);
+        }}
       />
     </div>
   );
@@ -154,10 +173,10 @@ export function PlaylistBuilder({
                     }
                   });
                 }}
-                onNotesChange={(notas) => {
+                onNoteChange={(notas, cor) => {
                   startTransition(async () => {
                     try {
-                      await updatePlaylistSongNotes({ playlistId, songId: item.songId, notas });
+                      await updatePlaylistSongNotes({ playlistId, songId: item.songId, notas, cor });
                       toast.success("Observação salva");
                     } catch (error) {
                       toast.error(error instanceof Error ? error.message : "Erro ao salvar observação");
