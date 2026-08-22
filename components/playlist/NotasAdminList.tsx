@@ -5,15 +5,11 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { updatePlaylistSongNotes } from "@/services/playlist.actions";
-import { NotaColorPicker } from "@/components/playlist/NotaColorPicker";
-import { getNotaCor, type NotaCorValue } from "@/lib/nota-colors";
-import { cn } from "@/lib/utils";
 
 export type NotaAdminItem = {
   playlistId: string;
   songId: string;
   notas: string | null;
-  cor: NotaCorValue | null;
   song: { titulo: string; artista: string | null };
   playlist: { nome: string; data: Date };
 };
@@ -24,18 +20,15 @@ function formatDate(date: Date): string {
 
 function NotaRow({ item }: { item: NotaAdminItem }) {
   const [notas, setNotas] = useState(item.notas ?? "");
-  const [cor, setCor] = useState<NotaCorValue | null>(item.cor);
   const [, startTransition] = useTransition();
-  const corInfo = getNotaCor(cor);
 
-  function save(nextNotas: string, nextCor: NotaCorValue | null) {
+  function save(nextNotas: string) {
     startTransition(async () => {
       try {
         await updatePlaylistSongNotes({
           playlistId: item.playlistId,
           songId: item.songId,
           notas: nextNotas,
-          cor: nextCor,
         });
         toast.success("Observação salva");
       } catch (error) {
@@ -45,9 +38,7 @@ function NotaRow({ item }: { item: NotaAdminItem }) {
   }
 
   return (
-    <div
-      className={cn("flex flex-col gap-2 rounded-md border p-2", corInfo && "border-l-4", corInfo?.border)}
-    >
+    <div className="flex flex-col gap-2 rounded-md border p-2">
       <div>
         <p className="text-sm font-medium">{item.song.titulo}</p>
         <p className="text-xs text-muted-foreground">{item.song.artista}</p>
@@ -57,14 +48,7 @@ function NotaRow({ item }: { item: NotaAdminItem }) {
         value={notas}
         rows={1}
         onChange={(e) => setNotas(e.target.value)}
-        onBlur={() => save(notas, cor)}
-      />
-      <NotaColorPicker
-        value={cor}
-        onChange={(next) => {
-          setCor(next);
-          save(notas, next);
-        }}
+        onBlur={() => save(notas)}
       />
     </div>
   );

@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShareSheet } from "@/components/share/ShareSheet";
 import { PublishPlaylistButton } from "@/components/playlist/PublishPlaylistButton";
-import { getNotaCor } from "@/lib/nota-colors";
-import { cn } from "@/lib/utils";
 
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -61,37 +59,22 @@ export default async function PlaylistPage({ params }: { params: Promise<{ id: s
       </div>
 
       <ol className="flex flex-col gap-2">
-        {playlist.songs.map((ps, i) => {
-          const corInfo = getNotaCor(ps.cor);
-          return (
-            <li key={ps.id}>
-              <Link
-                href={`/perform/${playlist.id}/${ps.songId}`}
-                className={cn(
-                  "flex flex-col rounded-md border p-3 hover:bg-accent",
-                  corInfo && "border-l-4",
-                  corInfo?.border
-                )}
-              >
-                <span className="font-medium">
-                  {i + 1}. {ps.song.titulo}
-                </span>
-                <span className="text-sm text-muted-foreground">{ps.song.artista}</span>
-                {ps.notas && (
-                  <span
-                    className={cn(
-                      "mt-1 flex items-center gap-1.5 text-sm italic",
-                      corInfo ? corInfo.text : "text-muted-foreground"
-                    )}
-                  >
-                    {corInfo && <span className={cn("inline-block size-2 rounded-full", corInfo.dot)} />}
-                    {ps.notas}
-                  </span>
-                )}
-              </Link>
-            </li>
-          );
-        })}
+        {playlist.songs.map((ps, i) => (
+          <li key={ps.id}>
+            <Link
+              href={`/perform/${playlist.id}/${ps.songId}`}
+              className="flex flex-col rounded-md border p-3 hover:bg-accent"
+            >
+              <span className="font-medium">
+                {i + 1}. {ps.song.titulo}
+              </span>
+              <span className="text-sm text-muted-foreground">{ps.song.artista}</span>
+              {ps.notas && (
+                <span className="mt-1 text-sm italic text-muted-foreground">{ps.notas}</span>
+              )}
+            </Link>
+          </li>
+        ))}
         {playlist.songs.length === 0 && (
           <p className="text-sm text-muted-foreground">Nenhuma música neste repertório ainda.</p>
         )}

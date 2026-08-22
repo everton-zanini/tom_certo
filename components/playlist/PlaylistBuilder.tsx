@@ -22,16 +22,12 @@ import {
   updatePlaylistSongNotes,
 } from "@/services/playlist.actions";
 import { PlaylistSongPicker, type PickableSong } from "@/components/playlist/PlaylistSongPicker";
-import { NotaColorPicker } from "@/components/playlist/NotaColorPicker";
-import { getNotaCor, type NotaCorValue } from "@/lib/nota-colors";
-import { cn } from "@/lib/utils";
 
 export type PlaylistBuilderSong = {
   songId: string;
   titulo: string;
   artista: string | null;
   notas: string | null;
-  cor: NotaCorValue | null;
 };
 
 function Row({
@@ -47,20 +43,14 @@ function Row({
   isLast: boolean;
   onMove: (delta: number) => void;
   onRemove: () => void;
-  onNoteChange: (notas: string, cor: NotaCorValue | null) => void;
+  onNoteChange: (notas: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.songId });
   const style = { transform: CSS.Transform.toString(transform), transition };
   const [notas, setNotas] = useState(item.notas ?? "");
-  const [cor, setCor] = useState<NotaCorValue | null>(item.cor);
-  const corInfo = getNotaCor(cor);
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn("flex flex-col gap-2 rounded-md border p-2", corInfo && "border-l-4", corInfo?.border)}
-    >
+    <div ref={setNodeRef} style={style} className="flex flex-col gap-2 rounded-md border p-2">
       <div className="flex items-center gap-2">
         <button
           {...attributes}
@@ -89,14 +79,7 @@ function Row({
         value={notas}
         rows={1}
         onChange={(e) => setNotas(e.target.value)}
-        onBlur={() => onNoteChange(notas, cor)}
-      />
-      <NotaColorPicker
-        value={cor}
-        onChange={(next) => {
-          setCor(next);
-          onNoteChange(notas, next);
-        }}
+        onBlur={() => onNoteChange(notas)}
       />
     </div>
   );
@@ -173,10 +156,10 @@ export function PlaylistBuilder({
                     }
                   });
                 }}
-                onNoteChange={(notas, cor) => {
+                onNoteChange={(notas) => {
                   startTransition(async () => {
                     try {
-                      await updatePlaylistSongNotes({ playlistId, songId: item.songId, notas, cor });
+                      await updatePlaylistSongNotes({ playlistId, songId: item.songId, notas });
                       toast.success("Observação salva");
                     } catch (error) {
                       toast.error(error instanceof Error ? error.message : "Erro ao salvar observação");

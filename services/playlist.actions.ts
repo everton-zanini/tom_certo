@@ -83,10 +83,10 @@ export async function reorderPlaylistSongs(playlistId: string, orderedSongIds: s
 
 export async function updatePlaylistSongNotes(input: unknown) {
   await requireRole("ADMIN");
-  const { playlistId, songId, notas, cor } = playlistSongNotesSchema.parse(input);
+  const { playlistId, songId, notas } = playlistSongNotesSchema.parse(input);
   await prisma.playlistSong.update({
     where: { playlistId_songId: { playlistId, songId } },
-    data: { notas, cor: cor ?? null },
+    data: { notas },
   });
   revalidatePath(`/playlists/${playlistId}/edit`);
   revalidatePath(`/playlists/${playlistId}`);
@@ -96,7 +96,7 @@ export async function updatePlaylistSongNotes(input: unknown) {
 export async function listPlaylistSongNotesAdmin() {
   await requireRole("ADMIN");
   return prisma.playlistSong.findMany({
-    where: { OR: [{ notas: { not: null } }, { cor: { not: null } }] },
+    where: { notas: { not: null } },
     orderBy: [{ playlist: { data: "desc" } }, { ordem: "asc" }],
     include: {
       song: { select: { titulo: true, artista: true } },
