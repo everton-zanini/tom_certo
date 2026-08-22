@@ -14,6 +14,9 @@ import { FullscreenToggle } from "@/components/song/FullscreenToggle";
 import { Button } from "@/components/ui/button";
 import { transposeChord, transposeLines } from "@/lib/cifra/transpose";
 import type { ParsedLine } from "@/lib/cifra/parser";
+import { NotaColorPicker } from "@/components/playlist/NotaColorPicker";
+import type { NotaCorValue } from "@/lib/nota-colors";
+import { CHORD_COLOR_STORAGE_KEY, getChordColorClass } from "@/lib/chord-colors";
 
 export type SongViewerSong = {
   id: string;
@@ -35,6 +38,7 @@ export function SongViewer({
   performNav?: { prevHref: string | null; nextHref: string | null };
 }) {
   const [fontSize, setFontSize] = useState(18);
+  const [chordColor, setChordColor] = useState<NotaCorValue | null>(null);
   const [transposeSteps, setTransposeSteps] = useState(0);
   const [projectionMode, setProjectionMode] = useState(false);
   const [teleprompterPlaying, setTeleprompterPlaying] = useState(false);
@@ -49,6 +53,20 @@ export function SongViewer({
   const displayKey = transposeChord(song.tomAtual, transposeSteps);
 
   useTeleprompter(containerRef, teleprompterSpeed, teleprompterPlaying);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(CHORD_COLOR_STORAGE_KEY) as NotaCorValue | null;
+    if (stored) setChordColor(stored);
+  }, []);
+
+  function handleChordColorChange(next: NotaCorValue | null) {
+    setChordColor(next);
+    if (next) {
+      localStorage.setItem(CHORD_COLOR_STORAGE_KEY, next);
+    } else {
+      localStorage.removeItem(CHORD_COLOR_STORAGE_KEY);
+    }
+  }
 
   useEffect(() => {
     function handleFullscreenChange() {
@@ -87,6 +105,12 @@ export function SongViewer({
             <TransposeControl currentKey={displayKey} onChange={(d) => setTransposeSteps((s) => s + d)} />
           )}
           <FontSizeControl fontSize={fontSize} onChange={setFontSize} />
+          {!projectionMode && (
+            <div className="flex items-center gap-1.5 rounded-md border px-2 py-1">
+              <span className="text-sm text-muted-foreground">Cor acordes</span>
+              <NotaColorPicker value={chordColor} onChange={handleChordColorChange} />
+            </div>
+          )}
           <TeleprompterControls
             playing={teleprompterPlaying}
             onTogglePlaying={() => setTeleprompterPlaying((p) => !p)}
@@ -143,7 +167,11 @@ export function SongViewer({
         className="flex-1 overflow-y-auto bg-background p-4"
         style={{ ["--cifra-font-size" as string]: `${fontSize}px` }}
       >
-        <ChordSheet lines={displayLines} showChords={!projectionMode} />
+        <ChordSheet
+          lines={displayLines}
+          showChords={!projectionMode}
+          chordColorClass={getChordColorClass(chordColor)}
+        />
 
         {isFullscreen && (
           <div
