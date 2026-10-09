@@ -1,17 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Roboto, JetBrains_Mono } from "next/font/google";
+import { Schibsted_Grotesk, Red_Hat_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { LoadingOverlayProvider } from "@/components/providers/loading-overlay-provider";
+import { PwaProvider } from "@/components/providers/pwa-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const roboto = Roboto({
-  variable: "--font-roboto",
+const grotesk = Schibsted_Grotesk({
+  variable: "--font-grotesk",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
 });
 
-const cifraMono = JetBrains_Mono({
+const cifraMono = Red_Hat_Mono({
   variable: "--font-cifra-mono",
   subsets: ["latin"],
 });
@@ -22,14 +22,17 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Tom Certo",
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
   },
 };
 
 export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#333333" },
+    { media: "(prefers-color-scheme: light)", color: "#eef1f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#11141b" },
   ],
 };
 
@@ -38,12 +41,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="pt-BR"
       suppressHydrationWarning
-      className={`${roboto.variable} ${cifraMono.variable} h-full antialiased`}
+      className={`${grotesk.variable} ${cifraMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <LoadingOverlayProvider>
             {children}
+            <PwaProvider />
             <Toaster />
           </LoadingOverlayProvider>
         </ThemeProvider>

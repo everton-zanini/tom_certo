@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export type SongCardData = {
@@ -12,21 +11,29 @@ export type SongCardData = {
 
 export function SongCard({ song }: { song: SongCardData }) {
   return (
-    <Link href={`/songs/${song.id}`}>
-      <Card className="h-full transition-colors hover:bg-accent">
-        <CardContent className="flex flex-col gap-1">
-          <span className="font-medium">{song.titulo}</span>
-          <span className="text-sm text-muted-foreground">{song.artista}</span>
-          <div className="mt-2 flex flex-wrap items-center gap-1">
-            <Badge variant="secondary">Tom: {song.tomAtual}</Badge>
+    <Link
+      href={`/songs/${song.id}`}
+      className="group flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-accent"
+    >
+      <span
+        aria-label={`Tom ${song.tomAtual}`}
+        className="flex size-12 shrink-0 items-center justify-center rounded-md bg-primary/10 text-lg font-bold text-primary"
+      >
+        {song.tomAtual}
+      </span>
+      <span className="flex min-w-0 flex-col">
+        <span className="truncate font-semibold">{song.titulo}</span>
+        {song.artista && <span className="truncate text-sm text-muted-foreground">{song.artista}</span>}
+        {song.tags.length > 0 && (
+          <span className="mt-1.5 flex flex-wrap gap-1">
             {song.tags.slice(0, 3).map(({ tag }) => (
               <Badge key={tag.nome} variant="outline">
                 {tag.nome}
               </Badge>
             ))}
-          </div>
-        </CardContent>
-      </Card>
+          </span>
+        )}
+      </span>
     </Link>
   );
 }

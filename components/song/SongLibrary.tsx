@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -82,8 +82,10 @@ export function SongLibrary({
     <div className="flex flex-1 flex-col gap-4 p-4">
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative sm:max-w-sm sm:flex-1">
+          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Buscar por título, artista ou letra..."
+            className="h-10 pl-9"
+            placeholder="Buscar por título, artista ou letra"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -92,7 +94,7 @@ export function SongLibrary({
           )}
         </div>
         <Select value={artista} onValueChange={(value) => setArtista(value ?? "all")}>
-          <SelectTrigger className="sm:w-48">
+          <SelectTrigger className="h-10 sm:w-48">
             <SelectValue placeholder="Artista" />
           </SelectTrigger>
           <SelectContent>

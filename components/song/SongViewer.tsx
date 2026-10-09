@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Minimize, Music, Presentation } from "lucide-react";
+import { ChevronLeft, ChevronRight, Minimize, Music, Pause, Play, Presentation, SlidersHorizontal } from "lucide-react";
 import { ChordSheet } from "@/components/song/ChordSheet";
 import { TransposeControl } from "@/components/song/TransposeControl";
 import { FontSizeControl } from "@/components/song/FontSizeControl";
@@ -18,6 +18,10 @@ import { NotaColorPicker } from "@/components/playlist/NotaColorPicker";
 import type { NotaCorValue } from "@/lib/nota-colors";
 import { CHORD_COLOR_STORAGE_KEY, getChordColorClass } from "@/lib/chord-colors";
 import { getPerformSongData } from "@/services/perform.actions";
+
+const FONT_SIZE_STORAGE_KEY = "tomcerto:fontSize";
+const SPEED_STORAGE_KEY = "tomcerto:teleprompterSpeed";
+const PROJECTION_STORAGE_KEY = "tomcerto:projection";
 
 export type SongViewerSong = {
   id: string;
@@ -50,6 +54,7 @@ export function SongViewer({
   const [teleprompterPlaying, setTeleprompterPlaying] = useState(false);
   const [teleprompterSpeed, setTeleprompterSpeed] = useState(40);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showMore, setShowMore] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const displayLines = useMemo(
@@ -67,7 +72,28 @@ export function SongViewer({
     const stored = localStorage.getItem(CHORD_COLOR_STORAGE_KEY) as NotaCorValue | null;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (stored) setChordColor(stored);
+    const storedSize = Number(localStorage.getItem(FONT_SIZE_STORAGE_KEY));
+    if (storedSize >= 12 && storedSize <= 40) setFontSize(storedSize);
+    const storedSpeed = Number(localStorage.getItem(SPEED_STORAGE_KEY));
+    if (storedSpeed >= 10 && storedSpeed <= 200) setTeleprompterSpeed(storedSpeed);
+    if (localStorage.getItem(PROJECTION_STORAGE_KEY) === "1") setProjectionMode(true);
   }, []);
+
+  function handleFontSizeChange(next: number) {
+    setFontSize(next);
+    localStorage.setItem(FONT_SIZE_STORAGE_KEY, String(next));
+  }
+
+  function handleSpeedChange(next: number) {
+    setTeleprompterSpeed(next);
+    localStorage.setItem(SPEED_STORAGE_KEY, String(next));
+  }
+
+  function handleProjectionToggle() {
+    const next = !projectionMode;
+    setProjectionMode(next);
+    localStorage.setItem(PROJECTION_STORAGE_KEY, next ? "1" : "0");
+  }
 
   function handleChordColorChange(next: NotaCorValue | null) {
     setChordColor(next);
@@ -119,48 +145,75 @@ export function SongViewer({
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b p-3">
-        <div>
-          <h1 className="text-lg font-semibold">{currentSong.titulo}</h1>
-          <p className="text-sm text-muted-foreground">{currentSong.artista}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant={projectionMode ? "default" : "outline"}
-            size="sm"
-            onClick={() => setProjectionMode((p) => !p)}
+      <div className="border-b bg-background">
+        <div className="flex items-center gap-3 px-4 pt-3 pb-2">
+          <span
+            aria-label={`Tom ${displayKey}`}
+            className="flex min-w-14 items-center justify-center rounded-lg bg-primary px-2 py-1.5 text-3xl leading-none font-bold text-primary-foreground"
           >
-            {projectionMode ? <Music className="size-4" /> : <Presentation className="size-4" />}
-            Projeção
-          </Button>
+            {displayKey}
+          </span>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-xl leading-tight font-bold">{currentSong.titulo}</h1>
+            {currentSong.artista && (
+              <p className="truncate text-sm text-muted-foreground">{currentSong.artista}</p>
+            )}
+          </div>
+          <FavoriteButton key={currentSong.id} songId={currentSong.id} initialFavorited={currentFavorited} />
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto px-4 pb-2.5">
           {!projectionMode && (
             <TransposeControl currentKey={displayKey} onChange={(d) => setTransposeSteps((s) => s + d)} />
           )}
-          <FontSizeControl fontSize={fontSize} onChange={setFontSize} />
-          {!projectionMode && (
-            <div className="flex items-center gap-1.5 rounded-md border px-2 py-1">
-              <span className="text-sm text-muted-foreground">Cor acordes</span>
-              <NotaColorPicker value={chordColor} onChange={handleChordColorChange} />
-            </div>
-          )}
-          <TeleprompterControls
-            playing={teleprompterPlaying}
-            onTogglePlaying={() => setTeleprompterPlaying((p) => !p)}
-            speed={teleprompterSpeed}
-            onSpeedChange={setTeleprompterSpeed}
-          />
-          {currentSong.linkYoutube && <YouTubeButton url={currentSong.linkYoutube} />}
-          <CopyLinkButton />
+          <FontSizeControl fontSize={fontSize} onChange={handleFontSizeChange} />
+          <Button
+            variant={teleprompterPlaying ? "default" : "outline"}
+            size="sm"
+            onClick={() => setTeleprompterPlaying((p) => !p)}
+            className={teleprompterPlaying ? "bg-stage text-stage-foreground hover:bg-stage/85" : undefined}
+          >
+            {teleprompterPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
+            Rolagem
+          </Button>
           <FullscreenToggle isFullscreen={isFullscreen} onToggle={toggleFullscreen} />
-          <FavoriteButton key={currentSong.id} songId={currentSong.id} initialFavorited={currentFavorited} />
+          <Button
+            variant={showMore ? "secondary" : "outline"}
+            size="sm"
+            aria-expanded={showMore}
+            onClick={() => setShowMore((v) => !v)}
+          >
+            <SlidersHorizontal className="size-4" />
+            Mais
+          </Button>
         </div>
+        {showMore && (
+          <div className="flex flex-wrap items-center gap-2 border-t px-4 py-2.5">
+            <Button variant={projectionMode ? "default" : "outline"} size="sm" onClick={handleProjectionToggle}>
+              {projectionMode ? <Music className="size-4" /> : <Presentation className="size-4" />}
+              Projeção
+            </Button>
+            {!projectionMode && (
+              <div className="flex items-center gap-1.5 rounded-md border px-2 py-1">
+                <span className="text-sm text-muted-foreground">Cor dos acordes</span>
+                <NotaColorPicker value={chordColor} onChange={handleChordColorChange} />
+              </div>
+            )}
+            <TeleprompterControls
+              playing={teleprompterPlaying}
+              onTogglePlaying={() => setTeleprompterPlaying((p) => !p)}
+              speed={teleprompterSpeed}
+              onSpeedChange={handleSpeedChange}
+            />
+            {currentSong.linkYoutube && <YouTubeButton url={currentSong.linkYoutube} />}
+            <CopyLinkButton />
+          </div>
+        )}
       </div>
 
       {nav && (
-        <div className="flex items-center justify-between border-b px-3 py-2">
+        <div className="flex items-center justify-between border-b px-3 py-1.5">
           <Button
             variant="ghost"
-            size="sm"
             disabled={!nav.prevSongId || isNavigating}
             onClick={() => nav.prevSongId && goToSong(nav.prevSongId)}
           >
@@ -168,7 +221,6 @@ export function SongViewer({
           </Button>
           <Button
             variant="ghost"
-            size="sm"
             disabled={!nav.nextSongId || isNavigating}
             onClick={() => nav.nextSongId && goToSong(nav.nextSongId)}
           >
@@ -180,15 +232,15 @@ export function SongViewer({
       <div
         ref={containerRef}
         onClick={() => setTeleprompterPlaying((p) => !p)}
-        className="flex-1 overflow-y-auto bg-background p-4"
+        className="flex-1 overflow-y-auto bg-background p-4 pb-24"
         style={{ ["--cifra-font-size" as string]: `${fontSize}px` }}
       >
         {isFullscreen && (
           <div
             onClick={(e) => e.stopPropagation()}
-            className="fixed inset-x-0 top-0 z-50 bg-background/95 px-4 py-3 text-center shadow-sm backdrop-blur"
+            className="pt-safe fixed inset-x-0 top-0 z-50 border-b bg-background/95 px-4 py-3 text-center backdrop-blur"
           >
-            <p className="text-lg font-semibold">{currentSong.titulo}</p>
+            <p className="text-lg font-bold">{currentSong.titulo}<span className="ml-2 text-primary">{displayKey}</span></p>
             {currentSong.artista && <p className="text-sm text-muted-foreground">{currentSong.artista}</p>}
           </div>
         )}
@@ -202,13 +254,12 @@ export function SongViewer({
         {isFullscreen && (
           <div
             onClick={(e) => e.stopPropagation()}
-            className="fixed inset-x-0 bottom-6 z-50 flex justify-center"
+            className="pb-safe fixed inset-x-0 bottom-6 z-50 flex justify-center"
           >
-            <div className="flex items-center gap-1 rounded-full border bg-background/95 p-1 shadow-lg backdrop-blur">
+            <div className="flex items-center gap-1 rounded-full border border-stage/50 bg-background/95 p-1 shadow-lg backdrop-blur">
               {nav && (
                 <Button
                   variant="ghost"
-                  size="sm"
                   disabled={!nav.prevSongId || isNavigating}
                   aria-label="Música anterior"
                   onClick={() => nav.prevSongId && goToSong(nav.prevSongId)}
@@ -216,13 +267,12 @@ export function SongViewer({
                   <ChevronLeft className="size-4" /> Anterior
                 </Button>
               )}
-              <Button variant="ghost" size="sm" onClick={toggleFullscreen} aria-label="Sair da tela cheia">
+              <Button variant="ghost" onClick={toggleFullscreen} aria-label="Sair da tela cheia" className="text-stage">
                 <Minimize className="size-4" /> Sair
               </Button>
               {nav && (
                 <Button
                   variant="ghost"
-                  size="sm"
                   disabled={!nav.nextSongId || isNavigating}
                   aria-label="Próxima música"
                   onClick={() => nav.nextSongId && goToSong(nav.nextSongId)}

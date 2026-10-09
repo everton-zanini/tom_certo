@@ -48,13 +48,13 @@ export function TeleprompterControls({
 }) {
   return (
     <div className="flex items-center gap-2 rounded-md border px-2 py-1">
-      <Button variant="ghost" size="icon" className="size-7" onClick={onTogglePlaying} aria-label={playing ? "Pausar" : "Iniciar"}>
+      <Button variant="ghost" size="icon" className="size-8" onClick={onTogglePlaying} aria-label={playing ? "Pausar" : "Iniciar"}>
         {playing ? <Pause className="size-4" /> : <Play className="size-4" />}
       </Button>
       <Button
         variant="ghost"
         size="icon"
-        className="size-7"
+        className="size-8"
         onClick={() => onSpeedChange(Math.max(10, speed - 10))}
         aria-label="Diminuir velocidade"
       >
@@ -64,7 +64,7 @@ export function TeleprompterControls({
       <Button
         variant="ghost"
         size="icon"
-        className="size-7"
+        className="size-8"
         onClick={() => onSpeedChange(Math.min(200, speed + 10))}
         aria-label="Aumentar velocidade"
       >

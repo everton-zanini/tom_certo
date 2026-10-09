@@ -13,22 +13,22 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-8 p-6">
-      <h1 className="text-2xl font-semibold">Olá, {session?.user?.name}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">Olá, {session?.user?.name}</h1>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Próximos repertórios</h2>
+        <h2 className="text-xl font-semibold">Próximos repertórios</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {playlists.map((playlist) => (
             <PlaylistCard key={playlist.id} playlist={playlist} />
           ))}
           {playlists.length === 0 && (
-            <p className="col-span-full text-sm text-muted-foreground">Nenhum repertório agendado.</p>
+            <p className="col-span-full text-sm text-muted-foreground">Nenhum repertório agendado. Crie um em Repertórios.</p>
           )}
         </div>
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Favoritos</h2>
+        <h2 className="text-xl font-semibold">Favoritos</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {favoriteSongs.map((song) => (
             <SongCard key={song.id} song={song} />

@@ -15,7 +15,7 @@ export function FontSizeControl({
       <Button
         variant="ghost"
         size="icon"
-        className="size-7"
+        className="size-8"
         onClick={() => onChange(Math.max(12, fontSize - 2))}
         aria-label="Diminuir fonte"
       >
@@ -25,7 +25,7 @@ export function FontSizeControl({
       <Button
         variant="ghost"
         size="icon"
-        className="size-7"
+        className="size-8"
         onClick={() => onChange(Math.min(40, fontSize + 2))}
         aria-label="Aumentar fonte"
       >

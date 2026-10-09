@@ -17,26 +17,33 @@ export function BottomNav({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 flex border-t bg-sidebar text-sidebar-foreground md:hidden">
-      {items
-        .filter((item) => !("adminOnly" in item && item.adminOnly) || isAdmin)
-        .map(({ href, label, icon: Icon }) => {
-          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+    <nav
+      aria-label="Principal"
+      className="pb-safe fixed inset-x-0 bottom-0 z-50 border-t bg-sidebar text-sidebar-foreground md:hidden"
+    >
+      <div className="flex">
+        {items
+          .filter((item) => !("adminOnly" in item && item.adminOnly) || isAdmin)
+          .map(({ href, label, icon: Icon }) => {
+            const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
 
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex flex-1 flex-col items-center gap-0.5 py-2 text-[0.65rem]",
-                active ? "text-green-600 dark:text-green-400" : "text-sidebar-foreground/60"
-              )}
-            >
-              <Icon className="size-5" />
-              {label}
-            </Link>
-          );
-        })}
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium",
+                  active ? "text-primary" : "text-sidebar-foreground/65"
+                )}
+              >
+                {active && <span className="absolute inset-x-6 top-0 h-0.5 rounded-full bg-primary" />}
+                <Icon className="size-5" strokeWidth={active ? 2.4 : 2} />
+                {label}
+              </Link>
+            );
+          })}
+      </div>
     </nav>
   );
 }
