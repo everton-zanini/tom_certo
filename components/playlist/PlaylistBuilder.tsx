@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -22,6 +22,7 @@ import {
   updatePlaylistSongNotes,
 } from "@/services/playlist.actions";
 import { PlaylistSongPicker, type PickableSong } from "@/components/playlist/PlaylistSongPicker";
+import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
 export type PlaylistBuilderSong = {
   songId: string;
@@ -96,20 +97,27 @@ export function PlaylistBuilder({
 }) {
   const [items, setItems] = useState(initialSongs);
   const [, startTransition] = useTransition();
+  const { runWithOverlay } = useLoadingOverlay();
   const router = useRouter();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  useEffect(() => setItems(initialSongs), [initialSongs]);
+  const [prevInitialSongs, setPrevInitialSongs] = useState(initialSongs);
+  if (prevInitialSongs !== initialSongs) {
+    setPrevInitialSongs(initialSongs);
+    setItems(initialSongs);
+  }
 
   function persistOrder(next: PlaylistBuilderSong[]) {
     setItems(next);
     startTransition(async () => {
-      try {
-        await reorderPlaylistSongs(playlistId, next.map((i) => i.songId));
-        router.refresh();
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao reordenar músicas");
-      }
+      await runWithOverlay(async () => {
+        try {
+          await reorderPlaylistSongs(playlistId, next.map((i) => i.songId));
+          router.refresh();
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "Erro ao reordenar músicas");
+        }
+      }, "Reordenando...");
     });
   }
 
@@ -147,23 +155,27 @@ export function PlaylistBuilder({
                 onRemove={() => {
                   setItems((prev) => prev.filter((i) => i.songId !== item.songId));
                   startTransition(async () => {
-                    try {
-                      await removeSongFromPlaylist(playlistId, item.songId);
-                      toast.success("Música removida do repertório");
-                      router.refresh();
-                    } catch (error) {
-                      toast.error(error instanceof Error ? error.message : "Erro ao remover música");
-                    }
+                    await runWithOverlay(async () => {
+                      try {
+                        await removeSongFromPlaylist(playlistId, item.songId);
+                        toast.success("Música removida do repertório");
+                        router.refresh();
+                      } catch (error) {
+                        toast.error(error instanceof Error ? error.message : "Erro ao remover música");
+                      }
+                    }, "Removendo...");
                   });
                 }}
                 onNoteChange={(notas) => {
                   startTransition(async () => {
-                    try {
-                      await updatePlaylistSongNotes({ playlistId, songId: item.songId, notas });
-                      toast.success("Observação salva");
-                    } catch (error) {
-                      toast.error(error instanceof Error ? error.message : "Erro ao salvar observação");
-                    }
+                    await runWithOverlay(async () => {
+                      try {
+                        await updatePlaylistSongNotes({ playlistId, songId: item.songId, notas });
+                        toast.success("Observação salva");
+                      } catch (error) {
+                        toast.error(error instanceof Error ? error.message : "Erro ao salvar observação");
+                      }
+                    }, "Salvando...");
                   });
                 }}
               />

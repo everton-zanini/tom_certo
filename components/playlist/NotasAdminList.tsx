@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { updatePlaylistSongNotes } from "@/services/playlist.actions";
+import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
 export type NotaAdminItem = {
   playlistId: string;
@@ -21,19 +22,22 @@ function formatDate(date: Date): string {
 function NotaRow({ item }: { item: NotaAdminItem }) {
   const [notas, setNotas] = useState(item.notas ?? "");
   const [, startTransition] = useTransition();
+  const { runWithOverlay } = useLoadingOverlay();
 
   function save(nextNotas: string) {
     startTransition(async () => {
-      try {
-        await updatePlaylistSongNotes({
-          playlistId: item.playlistId,
-          songId: item.songId,
-          notas: nextNotas,
-        });
-        toast.success("Observação salva");
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Erro ao salvar observação");
-      }
+      await runWithOverlay(async () => {
+        try {
+          await updatePlaylistSongNotes({
+            playlistId: item.playlistId,
+            songId: item.songId,
+            notas: nextNotas,
+          });
+          toast.success("Observação salva");
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "Erro ao salvar observação");
+        }
+      }, "Salvando...");
     });
   }
 

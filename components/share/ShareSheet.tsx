@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
 import { buildWhatsAppUrl } from "@/lib/share/build-message";
 import { generateWhatsAppShareText } from "@/services/playlist.actions";
+import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
 async function copy(text: string, label: string) {
   await navigator.clipboard.writeText(text);
@@ -18,8 +19,18 @@ export function ShareSheet({ playlistId }: { playlistId: string }) {
     null
   );
 
+  const { runWithOverlay } = useLoadingOverlay();
+
   return (
-    <Drawer onOpenChange={(open) => open && !texts && generateWhatsAppShareText(playlistId).then(setTexts)}>
+    <Drawer
+      onOpenChange={(open) => {
+        if (open && !texts) {
+          runWithOverlay(() => generateWhatsAppShareText(playlistId), "Gerando texto...")
+            .then(setTexts)
+            .catch((error) => toast.error(error instanceof Error ? error.message : "Erro ao gerar texto"));
+        }
+      }}
+    >
       <DrawerTrigger
         render={
           <Button variant="outline" size="sm">

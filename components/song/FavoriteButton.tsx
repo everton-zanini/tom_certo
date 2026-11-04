@@ -4,9 +4,11 @@ import { useOptimistic, useTransition } from "react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toggleFavorite } from "@/services/favorite.actions";
+import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 import { cn } from "@/lib/utils";
 
 export function FavoriteButton({ songId, initialFavorited }: { songId: string; initialFavorited: boolean }) {
+  const { runWithOverlay } = useLoadingOverlay();
   const [isPending, startTransition] = useTransition();
   const [favorited, setOptimisticFavorited] = useOptimistic(initialFavorited);
 
@@ -19,7 +21,7 @@ export function FavoriteButton({ songId, initialFavorited }: { songId: string; i
       onClick={() => {
         startTransition(async () => {
           setOptimisticFavorited(!favorited);
-          await toggleFavorite(songId);
+          await runWithOverlay(() => toggleFavorite(songId), "Atualizando favorito...");
         });
       }}
     >

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Minimize, Music, Pause, Play, Presentation, SlidersHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Minimize, Music, Pause, Play, Presentation, SlidersHorizontal } from "lucide-react";
 import { ChordSheet } from "@/components/song/ChordSheet";
 import { TransposeControl } from "@/components/song/TransposeControl";
 import { FontSizeControl } from "@/components/song/FontSizeControl";
@@ -217,14 +217,14 @@ export function SongViewer({
             disabled={!nav.prevSongId || isNavigating}
             onClick={() => nav.prevSongId && goToSong(nav.prevSongId)}
           >
-            <ChevronLeft className="size-4" /> Anterior
+            {isNavigating ? <Loader2 className="size-4 animate-spin" /> : <ChevronLeft className="size-4" />} Anterior
           </Button>
           <Button
             variant="ghost"
             disabled={!nav.nextSongId || isNavigating}
             onClick={() => nav.nextSongId && goToSong(nav.nextSongId)}
           >
-            Próxima <ChevronRight className="size-4" />
+            Próxima {isNavigating ? <Loader2 className="size-4 animate-spin" /> : <ChevronRight className="size-4" />}
           </Button>
         </div>
       )}
@@ -264,7 +264,7 @@ export function SongViewer({
                   aria-label="Música anterior"
                   onClick={() => nav.prevSongId && goToSong(nav.prevSongId)}
                 >
-                  <ChevronLeft className="size-4" /> Anterior
+                  {isNavigating ? <Loader2 className="size-4 animate-spin" /> : <ChevronLeft className="size-4" />} Anterior
                 </Button>
               )}
               <Button variant="ghost" onClick={toggleFullscreen} aria-label="Sair da tela cheia" className="text-stage">
@@ -277,7 +277,7 @@ export function SongViewer({
                   aria-label="Próxima música"
                   onClick={() => nav.nextSongId && goToSong(nav.nextSongId)}
                 >
-                  Próxima <ChevronRight className="size-4" />
+                  Próxima {isNavigating ? <Loader2 className="size-4 animate-spin" /> : <ChevronRight className="size-4" />}
                 </Button>
               )}
             </div>

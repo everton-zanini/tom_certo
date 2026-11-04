@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { Schibsted_Grotesk, Red_Hat_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { LoadingOverlayProvider } from "@/components/providers/loading-overlay-provider";
+import { NavigationLoading } from "@/components/providers/navigation-loading";
 import { PwaProvider } from "@/components/providers/pwa-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -47,6 +49,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <LoadingOverlayProvider>
             {children}
+            <Suspense fallback={null}>
+              <NavigationLoading />
+            </Suspense>
             <PwaProvider />
             <Toaster />
           </LoadingOverlayProvider>
