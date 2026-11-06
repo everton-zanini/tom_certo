@@ -1,5 +1,22 @@
 export type ChordToken = { text: string; column: number };
-export type ParsedLine = { lyrics: string; chords: ChordToken[]; isObservacao?: boolean };
+export type BlockKind = "pre-refrao" | "refrao" | "verso" | "ponte" | "interludio";
+export type ParsedLine = {
+  lyrics: string;
+  chords: ChordToken[];
+  isObservacao?: boolean;
+  /** Section the line belongs to, set by the block delimiters (see BLOCK_DEFS). */
+  block?: BlockKind;
+  /** First line of its block; the renderer shows the block title here. */
+  blockStart?: boolean;
+};
+
+export const BLOCK_DEFS: readonly { kind: BlockKind; titulo: string; open: string; close: string }[] = [
+  { kind: "pre-refrao", titulo: "Pré-Refrão", open: "/*", close: "*/" },
+  { kind: "refrao", titulo: "Refrão", open: "/#", close: "#/" },
+  { kind: "verso", titulo: "Verso", open: "/&", close: "&/" },
+  { kind: "ponte", titulo: "Ponte", open: "/$", close: "$/" },
+  { kind: "interludio", titulo: "Interlúdio", open: "/@", close: "@/" },
+];
 
 const CHORD_QUALITY =
   "maj7|maj9|maj|min7|min9|min|dim7b5|dim7|dim|aug|sus2|sus4|sus|add9|add11|m7b5|m7b9|m9|m7|m6|m11|m13|m|6|7|9|11|13|2";
@@ -45,6 +62,68 @@ export function extractObservacao(line: string): string | null {
   return trimmed.slice(1).trim();
 }
 
+type SourceLine = { text: string; block?: BlockKind; blockStart?: boolean };
+
+/**
+ * Removes block delimiters and tags each remaining line with its block.
+ * Inside an open block only its own closer counts; an unclosed block runs to the end.
+ * Lines left empty by delimiter removal are dropped.
+ */
+function extractBlocks(lines: string[]): SourceLine[] {
+  const result: SourceLine[] = [];
+  let open: (typeof BLOCK_DEFS)[number] | null = null;
+  let pendingStart = false;
+
+  for (const line of lines) {
+    const startedInBlock = open;
+    let text = "";
+    let hadDelimiter = false;
+    let touchedBlock = open !== null;
+    let kind = open?.kind;
+    let i = 0;
+    while (i < line.length) {
+      if (open === null) {
+        const def = BLOCK_DEFS.find((d) => line.startsWith(d.open, i));
+        if (def) {
+          open = def;
+          kind = kind ?? def.kind;
+          touchedBlock = true;
+          pendingStart = true;
+          hadDelimiter = true;
+          i += def.open.length;
+          if (text.trim() === "" && line[i] === " ") i += 1;
+          continue;
+        }
+      } else if (line.startsWith(open.close, i)) {
+        open = null;
+        hadDelimiter = true;
+        i += 2;
+        continue;
+      }
+      text += line[i];
+      i += 1;
+    }
+
+    if (hadDelimiter) text = text.trimEnd();
+    if (hadDelimiter && text.trim() === "") {
+      if (open === null && startedInBlock === null) pendingStart = false;
+      continue;
+    }
+
+    const entry: SourceLine = { text };
+    if (touchedBlock && kind) {
+      entry.block = kind;
+      if (pendingStart) {
+        entry.blockStart = true;
+        pendingStart = false;
+      }
+    }
+    result.push(entry);
+  }
+
+  return result;
+}
+
 /**
  * Parses raw monospaced cifra text (chord line directly above its lyric line,
  * as pasted from sites like Cifra Club) into a line-by-line structure that
@@ -52,33 +131,42 @@ export function extractObservacao(line: string): string | null {
  * without depending on padding with spaces.
  */
 export function parseCifra(raw: string): ParsedLine[] {
-  const lines = raw.replace(/\r\n/g, "\n").split("\n");
+  const lines = extractBlocks(raw.replace(/\r\n/g, "\n").split("\n"));
   const result: ParsedLine[] = [];
 
   let i = 0;
   while (i < lines.length) {
-    const line = lines[i];
+    const { text: line, block, blockStart } = lines[i];
     const observacao = extractObservacao(line);
     if (observacao !== null) {
-      result.push({ lyrics: observacao, chords: [], isObservacao: true });
+      result.push({ lyrics: observacao, chords: [], isObservacao: true, ...tag(block, blockStart) });
       i += 1;
       continue;
     }
     if (isChordLine(line)) {
       const chords = extractTokensWithColumns(line);
       const next = lines[i + 1];
-      if (next !== undefined && !isChordLine(next) && extractObservacao(next) === null) {
-        result.push({ lyrics: next, chords });
+      if (next !== undefined && !isChordLine(next.text) && extractObservacao(next.text) === null) {
+        result.push({
+          lyrics: next.text,
+          chords,
+          ...tag(block ?? next.block, blockStart || (block === undefined && next.blockStart)),
+        });
         i += 2;
       } else {
-        result.push({ lyrics: "", chords });
+        result.push({ lyrics: "", chords, ...tag(block, blockStart) });
         i += 1;
       }
     } else {
-      result.push({ lyrics: line, chords: [] });
+      result.push({ lyrics: line, chords: [], ...tag(block, blockStart) });
       i += 1;
     }
   }
 
   return result;
+}
+
+function tag(block?: BlockKind, blockStart?: boolean): Pick<ParsedLine, "block" | "blockStart"> {
+  if (!block) return {};
+  return blockStart ? { block, blockStart: true } : { block };
 }

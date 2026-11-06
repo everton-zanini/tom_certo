@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CifraHelpDialog } from "@/components/song/CifraHelpDialog";
 import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
 const formSchema = songSchema
@@ -138,12 +139,11 @@ export function SongForm({
           <Textarea id="observacoes" rows={3} {...register("observacoes")} />
         </div>
         <div className="flex flex-col gap-2 sm:col-span-2">
-          <Label htmlFor="cifra">Cifra (cole o texto com acordes acima da letra)</Label>
+          <div className="flex items-center gap-1">
+            <Label htmlFor="cifra">Cifra (cole o texto com acordes acima da letra)</Label>
+            <CifraHelpDialog />
+          </div>
           <Textarea id="cifra" rows={16} className="font-mono" {...register("cifra")} />
-          <p className="text-xs text-muted-foreground">
-            Para uma observação/instrução (ex: &ldquo;repetir o refrão&rdquo;), comece a linha com
-            &ldquo;&gt;&rdquo; — ela aparece destacada em azul na visualização.
-          </p>
           {errors.cifra && <p className="text-sm text-destructive">{errors.cifra.message}</p>}
         </div>
       </div>

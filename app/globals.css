@@ -25,6 +25,11 @@
   --color-chart-1: var(--chart-1);
   --color-stage: var(--stage);
   --color-stage-foreground: var(--stage-foreground);
+  --color-bloco-pre-refrao: var(--bloco-pre-refrao);
+  --color-bloco-refrao: var(--bloco-refrao);
+  --color-bloco-verso: var(--bloco-verso);
+  --color-bloco-ponte: var(--bloco-ponte);
+  --color-bloco-interludio: var(--bloco-interludio);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -71,6 +76,11 @@
   --ring: #2f46d6;
   --stage: #b86f00;
   --stage-foreground: #ffffff;
+  --bloco-pre-refrao: #6d28d9;
+  --bloco-refrao: #be123c;
+  --bloco-verso: #047857;
+  --bloco-ponte: #b45309;
+  --bloco-interludio: #0f766e;
   --chart-1: #2f46d6;
   --chart-2: #5b6fe6;
   --chart-3: #8a98ee;
@@ -108,6 +118,11 @@
   --ring: #8fa2ff;
   --stage: #f2b13a;
   --stage-foreground: #11141b;
+  --bloco-pre-refrao: #a78bfa;
+  --bloco-refrao: #fb7185;
+  --bloco-verso: #34d399;
+  --bloco-ponte: #fbbf24;
+  --bloco-interludio: #2dd4bf;
   --chart-1: #8fa2ff;
   --chart-2: #6c80f0;
   --chart-3: #4a5fd0;

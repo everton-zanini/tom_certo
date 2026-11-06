@@ -138,3 +138,69 @@ describe("extractObservacao", () => {
     expect(extractObservacao("G   D")).toBeNull();
   });
 });
+
+describe("parseCifra blocks", () => {
+  it.each([
+    ["/*", "*/", "pre-refrao"],
+    ["/#", "#/", "refrao"],
+    ["/&", "&/", "verso"],
+    ["/$", "$/", "ponte"],
+    ["/@", "@/", "interludio"],
+  ])("tags lines between %s and %s as %s", (open, close, kind) => {
+    const parsed = parseCifra(`antes\n${open}\nlinha 1\nlinha 2\n${close}\ndepois`);
+    expect(parsed).toEqual([
+      { lyrics: "antes", chords: [] },
+      { lyrics: "linha 1", chords: [], block: kind, blockStart: true },
+      { lyrics: "linha 2", chords: [], block: kind },
+      { lyrics: "depois", chords: [] },
+    ]);
+  });
+
+  it("accepts delimiters on the same line as the text", () => {
+    const parsed = parseCifra("/# Aleluia */ nao fecha #/\nfora");
+    expect(parsed).toEqual([
+      { lyrics: "Aleluia */ nao fecha", chords: [], block: "refrao", blockStart: true },
+      { lyrics: "fora", chords: [] },
+    ]);
+  });
+
+  it("keeps a chord line paired with its lyric inside a block", () => {
+    const parsed = parseCifra("/#\nG   D\nGrande é o Senhor\n#/");
+    expect(parsed).toEqual([
+      {
+        lyrics: "Grande é o Senhor",
+        chords: [{ text: "G", column: 0 }, { text: "D", column: 4 }],
+        block: "refrao",
+        blockStart: true,
+      },
+    ]);
+  });
+
+  it("runs an unclosed block to the end of the text", () => {
+    const parsed = parseCifra("/&\num\ndois");
+    expect(parsed.map((l) => l.block)).toEqual(["verso", "verso"]);
+  });
+
+  it("ignores delimiters of other kinds inside an open block", () => {
+    const parsed = parseCifra("/#\num /& dois\n#/");
+    expect(parsed).toEqual([
+      { lyrics: "um /& dois", chords: [], block: "refrao", blockStart: true },
+    ]);
+  });
+
+  it("drops lines left empty by delimiters and keeps blank lines inside a block", () => {
+    const parsed = parseCifra("/@\num\n\ndois\n@/");
+    expect(parsed).toEqual([
+      { lyrics: "um", chords: [], block: "interludio", blockStart: true },
+      { lyrics: "", chords: [], block: "interludio" },
+      { lyrics: "dois", chords: [], block: "interludio" },
+    ]);
+  });
+
+  it("keeps observations inside a block", () => {
+    const parsed = parseCifra("/*\n> devagar\n*/");
+    expect(parsed).toEqual([
+      { lyrics: "devagar", chords: [], isObservacao: true, block: "pre-refrao", blockStart: true },
+    ]);
+  });
+});
