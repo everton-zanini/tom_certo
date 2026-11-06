@@ -36,6 +36,18 @@ async function updateServiceWorker() {
   }
 }
 
+async function checkVersion(onOutdated: () => void) {
+  if (!CURRENT_ID) return;
+  try {
+    const response = await fetch("/api/version", { cache: "no-store" });
+    if (!response.ok) return;
+    const { id } = (await response.json()) as { id: string | null };
+    if (id && id !== CURRENT_ID) onOutdated();
+  } catch {
+    // Offline: try again on the next trigger.
+  }
+}
+
 export function UpdateProvider() {
   const pathname = usePathname();
   const [outdated, setOutdated] = useState(false);
@@ -46,23 +58,12 @@ export function UpdateProvider() {
     if (canReload()) setOutdated(true);
   }, []);
 
-  const checkVersion = useCallback(async () => {
-    if (!CURRENT_ID) return;
-    try {
-      const response = await fetch("/api/version", { cache: "no-store" });
-      if (!response.ok) return;
-      const { id } = (await response.json()) as { id: string | null };
-      if (id && id !== CURRENT_ID) markOutdated();
-    } catch {
-      // Offline: try again on the next trigger.
-    }
-  }, [markOutdated]);
-
   useEffect(() => {
-    void checkVersion();
-    const interval = setInterval(checkVersion, CHECK_EVERY_MS);
+    const check = () => void checkVersion(markOutdated);
+    check();
+    const interval = setInterval(check, CHECK_EVERY_MS);
     const onVisible = () => {
-      if (document.visibilityState === "visible") void checkVersion();
+      if (document.visibilityState === "visible") check();
     };
     const onError = (event: ErrorEvent) => {
       if (STALE_BUILD_ERROR.test(event.message)) markOutdated();
@@ -74,17 +75,17 @@ export function UpdateProvider() {
     };
 
     document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("online", checkVersion);
+    window.addEventListener("online", check);
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onRejection);
     return () => {
       clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("online", checkVersion);
+      window.removeEventListener("online", check);
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onRejection);
     };
-  }, [checkVersion, markOutdated]);
+  }, [markOutdated]);
 
   useEffect(() => {
     if (!outdated || onPerform) return;
