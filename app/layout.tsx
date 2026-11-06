@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { LoadingOverlayProvider } from "@/components/providers/loading-overlay-provider";
 import { NavigationLoading } from "@/components/providers/navigation-loading";
 import { PwaProvider } from "@/components/providers/pwa-provider";
+import { UpdateProvider } from "@/components/providers/update-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <NavigationLoading />
             </Suspense>
             <PwaProvider />
+            <UpdateProvider />
             <Toaster />
           </LoadingOverlayProvider>
         </ThemeProvider>
