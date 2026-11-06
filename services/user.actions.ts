@@ -9,14 +9,16 @@ import {
   changePasswordSchema,
   createUserSchema,
   resetPasswordSchema,
+  updateOwnTomSchema,
   updateUserActiveSchema,
   updateUserRoleSchema,
+  updateUserTomSchema,
 } from "@/types/schemas/user.schema";
 
 export async function listUsers() {
   await requireRole("ADMIN");
   return prisma.user.findMany({
-    select: { id: true, name: true, email: true, role: true, active: true },
+    select: { id: true, name: true, email: true, role: true, active: true, tom: true },
     orderBy: { name: "asc" },
   });
 }
@@ -28,7 +30,7 @@ export async function createUser(input: unknown) {
 
   try {
     const user = await prisma.user.create({
-      data: { name: data.name, email: data.email, passwordHash, role: data.role },
+      data: { name: data.name, email: data.email, passwordHash, role: data.role, tom: data.tom ?? null },
     });
     revalidatePath("/admin/users");
     return user;
@@ -54,6 +56,20 @@ export async function updateUserActive(input: unknown) {
   const user = await prisma.user.update({ where: { id: userId }, data: { active } });
   revalidatePath("/admin/users");
   return user;
+}
+
+export async function updateUserTom(input: unknown) {
+  await requireRole("ADMIN");
+  const { userId, tom } = updateUserTomSchema.parse(input);
+  await prisma.user.update({ where: { id: userId }, data: { tom: tom ?? null } });
+  revalidatePath("/admin/users");
+}
+
+export async function updateOwnTom(input: unknown) {
+  const session = await requireAuth();
+  const { tom } = updateOwnTomSchema.parse(input);
+  await prisma.user.update({ where: { id: session.user.id }, data: { tom: tom ?? null } });
+  revalidatePath("/account");
 }
 
 export async function changeOwnPassword(input: unknown) {

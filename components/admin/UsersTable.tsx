@@ -6,7 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { UserOptionsDialog } from "@/components/admin/UserOptionsDialog";
 import type { Role } from "@prisma/client";
 
-export type AdminUser = { id: string; name: string; email: string; role: Role; active: boolean };
+export type AdminUser = {
+  id: string; name: string; email: string; role: Role;
+  active: boolean;
+  tom?: string | null;
+};
 
 export function UsersTable({ users }: { users: AdminUser[] }) {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -28,6 +32,7 @@ export function UsersTable({ users }: { users: AdminUser[] }) {
             <p className="truncate text-sm text-muted-foreground">{user.email}</p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            {user.tom && <Badge variant="outline">{user.tom}</Badge>}
             <Badge variant="secondary">{user.role === "ADMIN" ? "Administrador" : "Membro"}</Badge>
             <ChevronRight className="size-4 text-muted-foreground" />
           </div>

@@ -1,10 +1,14 @@
 import { z } from "zod";
+import { TONS } from "@/lib/tons";
+
+const tomSchema = z.enum(TONS).nullish();
 
 export const createUserSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").max(200),
   email: z.string().email("Email inválido"),
   password: z.string().min(8, "Senha deve ter ao menos 8 caracteres"),
   role: z.enum(["ADMIN", "MEMBRO"]).default("MEMBRO"),
+  tom: tomSchema,
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
@@ -17,6 +21,15 @@ export const updateUserRoleSchema = z.object({
 export const updateUserActiveSchema = z.object({
   userId: z.string().min(1),
   active: z.boolean(),
+});
+
+export const updateUserTomSchema = z.object({
+  userId: z.string().min(1),
+  tom: tomSchema,
+});
+
+export const updateOwnTomSchema = z.object({
+  tom: tomSchema,
 });
 
 export const changePasswordSchema = z.object({
