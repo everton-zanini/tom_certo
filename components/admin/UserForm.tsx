@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TomSelect } from "@/components/user/TomSelect";
 import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
 const DEFAULT_PASSWORD = "trocar123";
@@ -41,7 +42,7 @@ export function UserForm() {
     formState: { errors },
   } = useForm<FormValues, unknown, FormOutput>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", email: "", role: "MEMBRO" },
+    defaultValues: { name: "", email: "", role: "MEMBRO", tom: null },
   });
 
   function onSubmit(values: FormOutput) {
@@ -100,6 +101,16 @@ export function UserForm() {
                       <SelectItem value="ADMIN">Administrador</SelectItem>
                     </SelectContent>
                   </Select>
+                )}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="tom">Tom (opcional)</Label>
+              <Controller
+                control={control}
+                name="tom"
+                render={({ field }) => (
+                  <TomSelect id="tom" value={field.value} onChange={field.onChange} />
                 )}
               />
             </div>

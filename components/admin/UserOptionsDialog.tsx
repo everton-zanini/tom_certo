@@ -15,8 +15,14 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { resetPasswordSchema } from "@/types/schemas/user.schema";
-import { resetUserPassword, updateUserActive, updateUserRole } from "@/services/user.actions";
+import {
+  resetUserPassword,
+  updateUserActive,
+  updateUserRole,
+  updateUserTom,
+} from "@/services/user.actions";
 import type { AdminUser } from "@/components/admin/UsersTable";
+import { TomSelect } from "@/components/user/TomSelect";
 import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
 export function UserOptionsDialog({
@@ -81,6 +87,21 @@ export function UserOptionsDialog({
     });
   }
 
+  function changeTom(tom: string | null) {
+    if (!user) return;
+    startTransition(async () => {
+      await runWithOverlay(async () => {
+        try {
+          await updateUserTom({ userId: user.id, tom });
+          toast.success("Tom atualizado");
+          router.refresh();
+        } catch (error) {
+          toast.error(error instanceof Error ? error.message : "Erro ao atualizar tom");
+        }
+      }, "Salvando...");
+    });
+  }
+
   function handleResetPassword() {
     if (!user) return;
     const parsed = resetPasswordSchema.safeParse({ userId: user.id, newPassword });
@@ -134,6 +155,11 @@ export function UserOptionsDialog({
                 ? "Desativar"
                 : "Reativar"}
           </Button>
+        </div>
+
+        <div className="flex flex-col gap-2 border-t pt-4">
+          <Label htmlFor="userTom">Tom</Label>
+          <TomSelect id="userTom" value={user.tom} onChange={changeTom} disabled={isPending} />
         </div>
 
         <div className="flex flex-col gap-2 border-t pt-4">
