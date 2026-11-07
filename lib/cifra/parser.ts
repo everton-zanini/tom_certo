@@ -131,7 +131,10 @@ function extractBlocks(lines: string[]): SourceLine[] {
  * without depending on padding with spaces.
  */
 export function parseCifra(raw: string): ParsedLine[] {
-  const lines = extractBlocks(raw.replace(/\r\n/g, "\n").split("\n"));
+  // Zero-width chars come along when pasting from some sites; JS \s/trim() don't strip them,
+  // which would make a chord token like "​D" fail to match.
+  const normalized = raw.replace(/[​-‍﻿]/g, "").replace(/\r\n/g, "\n");
+  const lines = extractBlocks(normalized.split("\n"));
   const result: ParsedLine[] = [];
 
   let i = 0;

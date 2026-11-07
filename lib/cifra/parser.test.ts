@@ -141,6 +141,14 @@ describe("parseCifra", () => {
   });
 });
 
+describe("parseCifra zero-width chars", () => {
+  it("recognizes chord lines prefixed with zero-width spaces", () => {
+    const parsed = parseCifra("​D\n​Eu sei\n​E      D/F#\n​Certamente");
+    expect(parsed.map((l) => l.chords.map((c) => c.text))).toEqual([["D"], ["E", "D/F#"]]);
+    expect(parsed[0].lyrics).toBe("Eu sei");
+  });
+});
+
 describe("extractObservacao", () => {
   it("extracts the text after '>' trimmed", () => {
     expect(extractObservacao("> Repetir com calma")).toBe("Repetir com calma");
