@@ -14,6 +14,11 @@ describe("isChordToken", () => {
     "Dm7b5",
     "G/B",
     "A#m7",
+    "F#4",
+    "G4",
+    "G7M",
+    "BM",
+    "CM7",
   ])("recognizes %s as a chord", (token) => {
     expect(isChordToken(token)).toBe(true);
   });
@@ -27,6 +32,15 @@ describe("isChordToken", () => {
 });
 
 describe("isChordLine", () => {
+  it("recognizes a chord line containing a 4 chord", () => {
+    expect(isChordLine("F# F#4 F#")).toBe(true);
+  });
+
+  it("recognizes a chord line with 7M and M qualities", () => {
+    expect(isChordLine("G7M BM F#m7")).toBe(true);
+    expect(isChordLine("G7M   A   Bm   F#m7")).toBe(true);
+  });
+
   it("recognizes a pure chord line", () => {
     expect(isChordLine("G          D")).toBe(true);
   });
