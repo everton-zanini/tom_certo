@@ -238,7 +238,7 @@ export function SongViewer({
         {isFullscreen && (
           <div
             onClick={(e) => e.stopPropagation()}
-            className="pt-safe fixed inset-x-0 top-0 z-50 border-b bg-background/95 px-4 py-3 text-center backdrop-blur"
+            className="pt-safe sticky top-0 z-50 -mx-4 -mt-4 mb-4 border-b bg-background/95 px-4 py-3 text-center backdrop-blur"
           >
             <p className="text-lg font-bold">{currentSong.titulo}<span className="ml-2 text-primary">{displayKey}</span></p>
             {currentSong.artista && <p className="text-sm text-muted-foreground">{currentSong.artista}</p>}
