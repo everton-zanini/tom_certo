@@ -250,9 +250,10 @@ export async function setSongCurrentKey(id: string, tom: string) {
 }
 
 /** Parses+transposes a song's cifra from its original key to its current working key. */
-export async function getSongDisplayLines(id: string) {
+export async function getSongDisplayLines(id: string, tomOverride?: string | null) {
   await requireAuth();
-  const song = await prisma.song.findUniqueOrThrow({ where: { id } });
+  const found = await prisma.song.findUniqueOrThrow({ where: { id } });
+  const song = tomOverride ? { ...found, tomAtual: tomOverride } : found;
   const semitones = semitoneDiff(song.tomOriginal, song.tomAtual);
   return { song, lines: transposeLines(parseCifra(song.cifra), semitones) };
 }

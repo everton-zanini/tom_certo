@@ -10,13 +10,12 @@ import { isFavorited } from "@/services/favorite.actions";
  * so that navigating never unmounts the viewer (which would kick it out of fullscreen).
  */
 export async function getPerformSongData(playlistId: string, songId: string) {
-  const [playlist, { song, lines }, favorited] = await Promise.all([
-    getPlaylist(playlistId),
-    getSongDisplayLines(songId),
+  const playlist = await getPlaylist(playlistId);
+  const index = playlist.songs.findIndex((ps) => ps.songId === songId);
+  const [{ song, lines }, favorited] = await Promise.all([
+    getSongDisplayLines(songId, playlist.songs[index]?.tom),
     isFavorited(songId),
   ]);
-
-  const index = playlist.songs.findIndex((ps) => ps.songId === songId);
   const prevSongId = index > 0 ? playlist.songs[index - 1].songId : null;
   const nextSongId = index >= 0 && index < playlist.songs.length - 1 ? playlist.songs[index + 1].songId : null;
 

@@ -155,6 +155,7 @@ model PlaylistSong {
   songId     String
   ordem      Int
   notas      String?  @db.Text
+  tom        String?
 
   playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
   // Restrict, not Cascade: deleting a Song shouldn't silently vanish from historical setlists.

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireRole } from "@/lib/authz";
-import { playlistSchema, playlistSongNotesSchema } from "@/types/schemas/playlist.schema";
+import { playlistSchema, playlistSongNotesSchema, playlistSongTomSchema } from "@/types/schemas/playlist.schema";
 import { buildLinksOnly, buildNamesOnly, buildPlaylistMessage } from "@/lib/share/build-message";
 
 export async function createPlaylist(input: unknown) {
@@ -91,6 +91,18 @@ export async function updatePlaylistSongNotes(input: unknown) {
   revalidatePath(`/playlists/${playlistId}/edit`);
   revalidatePath(`/playlists/${playlistId}`);
   revalidatePath("/songs/notas");
+}
+
+export async function updatePlaylistSongTom(input: unknown) {
+  await requireRole("ADMIN");
+  const { playlistId, songId, tom } = playlistSongTomSchema.parse(input);
+  await prisma.playlistSong.update({
+    where: { playlistId_songId: { playlistId, songId } },
+    data: { tom },
+  });
+  revalidatePath(`/playlists/${playlistId}/edit`);
+  revalidatePath(`/playlists/${playlistId}`);
+  revalidatePath(`/perform/${playlistId}`, "layout");
 }
 
 export async function listPlaylistSongNotesAdmin() {

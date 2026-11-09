@@ -1,4 +1,11 @@
 import { z } from "zod";
+import { TONS } from "@/lib/tons";
+
+export const playlistSongTomSchema = z.object({
+  playlistId: z.string().min(1),
+  songId: z.string().min(1),
+  tom: z.enum(TONS).nullable(),
+});
 
 export const playlistSchema = z.object({
   nome: z.string().min(1, "Nome é obrigatório").max(200),

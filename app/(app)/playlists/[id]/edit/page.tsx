@@ -30,6 +30,7 @@ export default async function EditPlaylistPage({ params }: { params: Promise<{ i
             titulo: ps.song.titulo,
             artista: ps.song.artista,
             notas: ps.notas,
+            tom: ps.tom,
           }))}
           availableSongs={allSongs.map((s) => ({ id: s.id, titulo: s.titulo, artista: s.artista }))}
         />

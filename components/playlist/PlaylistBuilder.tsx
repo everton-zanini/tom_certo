@@ -20,7 +20,9 @@ import {
   removeSongFromPlaylist,
   reorderPlaylistSongs,
   updatePlaylistSongNotes,
+  updatePlaylistSongTom,
 } from "@/services/playlist.actions";
+import { TomSelect } from "@/components/user/TomSelect";
 import { PlaylistSongPicker, type PickableSong } from "@/components/playlist/PlaylistSongPicker";
 import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 
@@ -29,6 +31,7 @@ export type PlaylistBuilderSong = {
   titulo: string;
   artista: string | null;
   notas: string | null;
+  tom: string | null;
 };
 
 function Row({
@@ -38,6 +41,7 @@ function Row({
   onMove,
   onRemove,
   onNoteChange,
+  onTomChange,
 }: {
   item: PlaylistBuilderSong;
   isFirst: boolean;
@@ -45,10 +49,12 @@ function Row({
   onMove: (delta: number) => void;
   onRemove: () => void;
   onNoteChange: (notas: string) => void;
+  onTomChange: (tom: string | null) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.songId });
   const style = { transform: CSS.Transform.toString(transform), transition };
   const [notas, setNotas] = useState(item.notas ?? "");
+  const [tom, setTom] = useState(item.tom);
 
   return (
     <div ref={setNodeRef} style={style} className="flex flex-col gap-2 rounded-md border p-2">
@@ -74,6 +80,16 @@ function Row({
         <Button variant="ghost" size="icon-sm" onClick={onRemove} aria-label="Remover do repertório">
           <X className="size-4" />
         </Button>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">Tom (opcional)</span>
+        <TomSelect
+          value={tom}
+          onChange={(next) => {
+            setTom(next);
+            onTomChange(next);
+          }}
+        />
       </div>
       <Textarea
         placeholder="Observações (ex: repetir refrão, ministrar)"
@@ -164,6 +180,18 @@ export function PlaylistBuilder({
                         toast.error(error instanceof Error ? error.message : "Erro ao remover música");
                       }
                     }, "Removendo...");
+                  });
+                }}
+                onTomChange={(tom) => {
+                  startTransition(async () => {
+                    await runWithOverlay(async () => {
+                      try {
+                        await updatePlaylistSongTom({ playlistId, songId: item.songId, tom });
+                        toast.success("Tom salvo");
+                      } catch (error) {
+                        toast.error(error instanceof Error ? error.message : "Erro ao salvar tom");
+                      }
+                    }, "Salvando...");
                   });
                 }}
                 onNoteChange={(notas) => {
