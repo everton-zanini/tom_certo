@@ -19,10 +19,13 @@ export const BLOCK_DEFS: readonly { kind: BlockKind; titulo: string; open: strin
 ];
 
 const CHORD_QUALITY =
-  "7M|M7|M9|M|maj7|maj9|maj|min7|min9|min|dim7b5|dim7|dim|aug|sus2|sus4|sus|add9|add11|m7b5|m7b9|m9|m7|m6|m11|m13|m|4|6|7|9|11|13|2";
+  "7M|M7|M9|M|maj7|maj9|maj|min7|min9|min|dim7b5|dim7|dim|aug|sus2|sus4|sus|add9|add11|m7b5|m7b9|m9|m7|m6|m11|m13|m|4|5|6|7|9|11|13|2";
+
+// Optional parenthesized extensions, e.g. F7M(2), G5(9/11), B7(b9), F#7(13-).
+const CHORD_EXTENSION = "(\\([0-9#b+\\-/M]+\\))*";
 
 const CHORD_TOKEN = new RegExp(
-  `^[A-G](#|b)?(${CHORD_QUALITY})?(\\/[A-G](#|b)?)?$`
+  `^[A-G](#|b)?(${CHORD_QUALITY})?${CHORD_EXTENSION}(\\/[A-G](#|b)?)?$`
 );
 
 const FILLER_TOKEN = /^(\|+|-+|x\d+|\(x?\d+\)|%|n\.?c\.?\.?)$/i;

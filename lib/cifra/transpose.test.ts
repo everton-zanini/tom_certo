@@ -96,3 +96,12 @@ describe("semitoneDiff", () => {
     expect(semitoneDiff("Am", "Cm")).toBe(3);
   });
 });
+
+describe("transposeChord with parenthesized extensions", () => {
+  it("transposes F7M(2)/C by +2", () => {
+    expect(transposeChord("F7M(2)/C", 2)).toBe("G7M(2)/D");
+  });
+  it("transposes G5(9/11) by +2", () => {
+    expect(transposeChord("G5(9/11)", 2)).toBe("A5(9/11)");
+  });
+});

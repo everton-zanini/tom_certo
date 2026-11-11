@@ -23,7 +23,7 @@ const NOTE_TO_INDEX: Record<string, number> = {
   B: 11,
 };
 
-const CHORD_PARTS = /^([A-G](?:#|b)?)([^/]*)(?:\/([A-G](?:#|b)?))?$/;
+const CHORD_PARTS = /^([A-G](?:#|b)?)((?:[^/(]|\([^)]*\))*)(?:\/([A-G](?:#|b)?))?$/;
 
 function shiftNote(note: string, semitones: number, preferFlat: boolean): string {
   const index = NOTE_TO_INDEX[note];

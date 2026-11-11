@@ -19,6 +19,11 @@ describe("isChordToken", () => {
     "G7M",
     "BM",
     "CM7",
+    "F7M(2)/C",
+    "G5(9/11)",
+    "B7(b9)",
+    "F#7(13-)",
+    "Em7(11)/B",
   ])("recognizes %s as a chord", (token) => {
     expect(isChordToken(token)).toBe(true);
   });
