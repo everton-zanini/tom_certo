@@ -1,18 +1,13 @@
-import { BLOCK_DEFS, type BlockKind, type ParsedLine } from "@/lib/cifra/parser";
+import { type BlockKind, type ParsedLine } from "@/lib/cifra/parser";
 
 // Full class names must stay literal so Tailwind can detect them.
 const BLOCK_STYLES: Record<BlockKind, string> = {
-  "pre-refrao": "border-bloco-pre-refrao text-bloco-pre-refrao",
-  refrao: "border-bloco-refrao text-bloco-refrao",
-  verso: "border-bloco-verso text-bloco-verso",
-  ponte: "border-bloco-ponte text-bloco-ponte",
-  interludio: "border-bloco-interludio text-bloco-interludio",
+  "pre-refrao": "border-bloco-pre-refrao",
+  refrao: "border-bloco-refrao",
+  verso: "border-bloco-verso",
+  ponte: "border-bloco-ponte",
+  interludio: "border-bloco-interludio",
 };
-
-const BLOCK_TITLES = Object.fromEntries(BLOCK_DEFS.map((d) => [d.kind, d.titulo])) as Record<
-  BlockKind,
-  string
->;
 
 type Group = { block?: BlockKind; lines: ParsedLine[] };
 
@@ -67,12 +62,7 @@ export function ChordSheet({
 
         if (!group.block) return <div key={g}>{rows}</div>;
         return (
-          <section key={g} className="my-2">
-            <div
-              className={`mb-1 border-l-[3px] pl-3 font-sans text-[0.8em] font-semibold ${BLOCK_STYLES[group.block]}`}
-            >
-              {BLOCK_TITLES[group.block]}
-            </div>
+          <section key={g} className={`my-2 border-l-[3px] pl-3 ${BLOCK_STYLES[group.block]}`}>
             {rows}
           </section>
         );
