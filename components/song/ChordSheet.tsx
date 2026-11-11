@@ -2,11 +2,11 @@ import { type BlockKind, type ParsedLine } from "@/lib/cifra/parser";
 
 // Full class names must stay literal so Tailwind can detect them.
 const BLOCK_STYLES: Record<BlockKind, string> = {
-  "pre-refrao": "border-bloco-pre-refrao",
-  refrao: "border-bloco-refrao",
-  verso: "border-bloco-verso",
-  ponte: "border-bloco-ponte",
-  interludio: "border-bloco-interludio",
+  "pre-refrao": "border-bloco-pre-refrao text-bloco-pre-refrao bg-[color-mix(in_srgb,var(--bloco-pre-refrao)_8%,transparent)]",
+  refrao: "border-bloco-refrao text-bloco-refrao bg-[color-mix(in_srgb,var(--bloco-refrao)_8%,transparent)]",
+  verso: "border-bloco-verso text-bloco-verso bg-[color-mix(in_srgb,var(--bloco-verso)_8%,transparent)]",
+  ponte: "border-bloco-ponte text-bloco-ponte bg-[color-mix(in_srgb,var(--bloco-ponte)_8%,transparent)]",
+  interludio: "border-bloco-interludio text-bloco-interludio bg-[color-mix(in_srgb,var(--bloco-interludio)_8%,transparent)]",
 };
 
 type Group = { block?: BlockKind; lines: ParsedLine[] };
@@ -62,7 +62,7 @@ export function ChordSheet({
 
         if (!group.block) return <div key={g}>{rows}</div>;
         return (
-          <section key={g} className={`my-2 border-l-[3px] pl-3 ${BLOCK_STYLES[group.block]}`}>
+          <section key={g} className={`my-2 rounded-r-md border-l-[3px] py-1.5 pl-3 ${BLOCK_STYLES[group.block]}`}>
             {rows}
           </section>
         );
