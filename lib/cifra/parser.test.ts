@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractObservacao, isChordLine, isChordToken, parseCifra } from "./parser";
+import { extractObservacao, extractObservacaoSecundaria, isChordLine, isChordToken, parseCifra } from "./parser";
 
 describe("isChordToken", () => {
   it.each([
@@ -143,6 +143,50 @@ describe("parseCifra", () => {
     const raw = ">";
     const parsed = parseCifra(raw);
     expect(parsed).toEqual([{ lyrics: "", chords: [], isObservacao: true }]);
+  });
+
+  it("recognizes a secondary observation line starting with '<'", () => {
+    const parsed = parseCifra("Grande é o Senhor\n< Só teclado\n> Repetir");
+    expect(parsed[1]).toEqual({
+      lyrics: "Só teclado",
+      chords: [],
+      isObservacao: true,
+      observacaoSecundaria: true,
+    });
+    expect(parsed[2]).toEqual({ lyrics: "Repetir", chords: [], isObservacao: true });
+  });
+
+  it("does not swallow a secondary observation under a chord line", () => {
+    const parsed = parseCifra("G          D\n< Só teclado");
+    expect(parsed).toHaveLength(2);
+    expect(parsed[0].lyrics).toBe("");
+    expect(parsed[1].observacaoSecundaria).toBe(true);
+  });
+
+  it("tags a secondary observation inside a block", () => {
+    const parsed = parseCifra("/#\n< Só teclado\n#/");
+    expect(parsed).toEqual([
+      {
+        lyrics: "Só teclado",
+        chords: [],
+        isObservacao: true,
+        observacaoSecundaria: true,
+        block: "refrao",
+        blockStart: true,
+      },
+    ]);
+  });
+});
+
+describe("extractObservacaoSecundaria", () => {
+  it("extracts the text after '<' trimmed", () => {
+    expect(extractObservacaoSecundaria("< Só teclado")).toBe("Só teclado");
+    expect(extractObservacaoSecundaria("  <Só teclado  ")).toBe("Só teclado");
+  });
+
+  it("returns null for lines that don't start with '<'", () => {
+    expect(extractObservacaoSecundaria("> Repetir")).toBeNull();
+    expect(extractObservacaoSecundaria("G   D")).toBeNull();
   });
 });
 

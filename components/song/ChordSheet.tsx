@@ -40,7 +40,11 @@ export function ChordSheet({
           line.isObservacao ? (
             <blockquote
               key={i}
-              className="my-1 border-l-2 border-sky-400 pl-3 italic whitespace-pre-wrap text-sky-600 dark:border-sky-500 dark:text-sky-400"
+              className={`my-1 border-l-2 pl-3 italic whitespace-pre-wrap ${
+                line.observacaoSecundaria
+                  ? "border-amber-500 text-amber-600 dark:border-amber-400 dark:text-amber-400"
+                  : "border-sky-400 text-sky-600 dark:border-sky-500 dark:text-sky-400"
+              }`}
             >
               {line.lyrics}
             </blockquote>
