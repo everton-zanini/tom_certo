@@ -142,7 +142,8 @@ export async function listPlaylists(filters?: {
         return { gte: start, lt: new Date(start.getTime() + 24 * 60 * 60 * 1000) };
       })()
     : filters?.upcoming
-      ? { gte: new Date(new Date().toDateString()) }
+      ? // ainda não apresentado: data do repertório + 1 dia > agora
+        { gt: new Date(Date.now() - 24 * 60 * 60 * 1000) }
       : undefined;
 
   const where = {

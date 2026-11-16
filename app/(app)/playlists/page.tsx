@@ -17,7 +17,7 @@ export default async function PlaylistsPage({
 
   const [session, { playlists, totalPages }] = await Promise.all([
     auth(),
-    listPlaylists({ page, date }),
+    listPlaylists({ page, date, upcoming: !date }),
   ]);
 
   return (
