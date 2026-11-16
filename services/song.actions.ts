@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth, requireRole } from "@/lib/authz";
 import { songSchema, songsPageInputSchema, type SongFilters } from "@/types/schemas/song.schema";
 import { parseCifra } from "@/lib/cifra/parser";
-import { transposeLines, semitoneDiff } from "@/lib/cifra/transpose";
+import { transposeLines } from "@/lib/cifra/transpose";
+import { buildDisplayLines } from "@/lib/cifra/display";
 import { extractCfsEntries, inflateCfsEntry, parseCfsText } from "@/lib/cifra/cfs-import";
 
 function tagConnections(tags: string[]) {
@@ -253,7 +254,5 @@ export async function setSongCurrentKey(id: string, tom: string) {
 export async function getSongDisplayLines(id: string, tomOverride?: string | null) {
   await requireAuth();
   const found = await prisma.song.findUniqueOrThrow({ where: { id } });
-  const song = tomOverride ? { ...found, tomAtual: tomOverride } : found;
-  const semitones = semitoneDiff(song.tomOriginal, song.tomAtual);
-  return { song, lines: transposeLines(parseCifra(song.cifra), semitones) };
+  return buildDisplayLines(found, tomOverride);
 }
