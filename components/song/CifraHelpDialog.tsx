@@ -8,7 +8,7 @@ import { ChordSheet } from "@/components/song/ChordSheet";
 import { BLOCK_DEFS, parseCifra } from "@/lib/cifra/parser";
 
 const CHORDS_EXAMPLE = "G       D\nGrande é o Senhor";
-const OBSERVACAO_EXAMPLE = "> Repetir com calma";
+const OBSERVACAO_EXAMPLE = "> Repetir com calma\n< Só teclado";
 
 export function CifraHelpDialog() {
   const [open, setOpen] = useState(false);
@@ -41,7 +41,8 @@ export function CifraHelpDialog() {
           <h3 className="text-sm font-semibold">Observação</h3>
           <p className="text-sm text-muted-foreground">
             Para uma instrução ao músico (ex: &ldquo;repetir o refrão&rdquo;), comece a linha com{" "}
-            <code className="rounded bg-muted px-1">&gt;</code>. Ela aparece em azul e itálico.
+            <code className="rounded bg-muted px-1">&gt;</code>. Ela aparece em azul e itálico. Para uma segunda observação, em âmbar, comece com{" "}
+            <code className="rounded bg-muted px-1">&lt;</code>.
           </p>
           <pre className="rounded-md bg-muted px-3 py-2 text-sm">{OBSERVACAO_EXAMPLE}</pre>
           <div className="rounded-md border px-3 py-2">
