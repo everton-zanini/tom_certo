@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Loader2, Minimize, Music, Pause, Play, Presentation, SlidersHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, Minimize, Music, Pause, Play, Presentation, SlidersHorizontal } from "lucide-react";
 import { ChordSheet } from "@/components/song/ChordSheet";
 import { TransposeControl } from "@/components/song/TransposeControl";
 import { FontSizeControl } from "@/components/song/FontSizeControl";
@@ -17,7 +16,7 @@ import type { ParsedLine } from "@/lib/cifra/parser";
 import { NotaColorPicker } from "@/components/playlist/NotaColorPicker";
 import type { NotaCorValue } from "@/lib/nota-colors";
 import { CHORD_COLOR_STORAGE_KEY, getChordColorClass } from "@/lib/chord-colors";
-import { getPerformSongData } from "@/services/perform.actions";
+import type { PerformSong } from "@/services/perform.actions";
 
 const FONT_SIZE_STORAGE_KEY = "tomcerto:fontSize";
 const SPEED_STORAGE_KEY = "tomcerto:teleprompterSpeed";
@@ -40,13 +39,16 @@ export function SongViewer({
   song: SongViewerSong;
   initialLines: ParsedLine[];
   favorited: boolean;
-  performNav?: { playlistId: string; prevSongId: string | null; nextSongId: string | null };
+  performNav?: { playlistId: string; songs: PerformSong[]; initialIndex: number };
 }) {
   const [currentSong, setCurrentSong] = useState(song);
   const [currentLines, setCurrentLines] = useState(initialLines);
   const [currentFavorited, setCurrentFavorited] = useState(favorited);
-  const [nav, setNav] = useState(performNav);
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [performSongs, setPerformSongs] = useState(performNav?.songs ?? []);
+  const [index, setIndex] = useState(performNav?.initialIndex ?? 0);
+  const nav = performNav
+    ? { prevIndex: index > 0 ? index - 1 : null, nextIndex: index < performSongs.length - 1 ? index + 1 : null }
+    : null;
   const [fontSize, setFontSize] = useState(18);
   const [chordColor, setChordColor] = useState<NotaCorValue | null>(null);
   const [transposeSteps, setTransposeSteps] = useState(0);
@@ -121,25 +123,25 @@ export function SongViewer({
     }
   }
 
-  // Fetches the next/previous song client-side instead of navigating, so the
-  // viewer never unmounts — a real route change would drop the fullscreen element
-  // from the DOM and the browser auto-exits fullscreen.
-  async function goToSong(songId: string) {
-    if (!nav || isNavigating) return;
-    setIsNavigating(true);
-    try {
-      const data = await getPerformSongData(nav.playlistId, songId);
-      setCurrentSong(data.song);
-      setCurrentLines(data.lines);
-      setCurrentFavorited(data.favorited);
-      setNav({ playlistId: nav.playlistId, prevSongId: data.prevSongId, nextSongId: data.nextSongId });
-      setTransposeSteps(0);
-      if (containerRef.current) containerRef.current.scrollTop = 0;
-      window.history.replaceState(null, "", `/perform/${nav.playlistId}/${songId}`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao carregar música");
-    } finally {
-      setIsNavigating(false);
+  // Todo o repertório já veio carregado: trocar de música é só trocar estado, sem
+  // rede. Não navega de rota para o viewer não desmontar — uma troca de rota tiraria
+  // o elemento em tela cheia do DOM e o navegador sairia da tela cheia.
+  function goToSong(nextIndex: number) {
+    const target = performSongs[nextIndex];
+    if (!performNav || !target) return;
+    setIndex(nextIndex);
+    setCurrentSong(target.song);
+    setCurrentLines(target.lines);
+    setCurrentFavorited(target.favorited);
+    setTransposeSteps(0);
+    if (containerRef.current) containerRef.current.scrollTop = 0;
+    window.history.replaceState(null, "", `/perform/${performNav.playlistId}/${target.song.id}`);
+  }
+
+  function handleFavoriteChange(next: boolean) {
+    setCurrentFavorited(next);
+    if (performNav) {
+      setPerformSongs((songs) => songs.map((s, i) => (i === index ? { ...s, favorited: next } : s)));
     }
   }
 
@@ -159,7 +161,12 @@ export function SongViewer({
               <p className="truncate text-sm text-muted-foreground">{currentSong.artista}</p>
             )}
           </div>
-          <FavoriteButton key={currentSong.id} songId={currentSong.id} initialFavorited={currentFavorited} />
+          <FavoriteButton
+            key={currentSong.id}
+            songId={currentSong.id}
+            initialFavorited={currentFavorited}
+            onChange={handleFavoriteChange}
+          />
         </div>
         <div className="flex items-center gap-2 overflow-x-auto px-4 pb-2.5">
           {!projectionMode && (
@@ -214,17 +221,17 @@ export function SongViewer({
         <div className="flex items-center justify-between border-b px-3 py-1.5">
           <Button
             variant="ghost"
-            disabled={!nav.prevSongId || isNavigating}
-            onClick={() => nav.prevSongId && goToSong(nav.prevSongId)}
+            disabled={nav.prevIndex === null}
+            onClick={() => nav.prevIndex !== null && goToSong(nav.prevIndex)}
           >
-            {isNavigating ? <Loader2 className="size-4 animate-spin" /> : <ChevronLeft className="size-4" />} Anterior
+            <ChevronLeft className="size-4" /> Anterior
           </Button>
           <Button
             variant="ghost"
-            disabled={!nav.nextSongId || isNavigating}
-            onClick={() => nav.nextSongId && goToSong(nav.nextSongId)}
+            disabled={nav.nextIndex === null}
+            onClick={() => nav.nextIndex !== null && goToSong(nav.nextIndex)}
           >
-            Próxima {isNavigating ? <Loader2 className="size-4 animate-spin" /> : <ChevronRight className="size-4" />}
+            Próxima <ChevronRight className="size-4" />
           </Button>
         </div>
       )}
@@ -260,11 +267,11 @@ export function SongViewer({
               {nav && (
                 <Button
                   variant="ghost"
-                  disabled={!nav.prevSongId || isNavigating}
+                  disabled={nav.prevIndex === null}
                   aria-label="Música anterior"
-                  onClick={() => nav.prevSongId && goToSong(nav.prevSongId)}
+                  onClick={() => nav.prevIndex !== null && goToSong(nav.prevIndex)}
                 >
-                  {isNavigating ? <Loader2 className="size-4 animate-spin" /> : <ChevronLeft className="size-4" />} Anterior
+                  <ChevronLeft className="size-4" /> Anterior
                 </Button>
               )}
               <Button variant="ghost" onClick={toggleFullscreen} aria-label="Sair da tela cheia" className="text-stage">
@@ -273,11 +280,11 @@ export function SongViewer({
               {nav && (
                 <Button
                   variant="ghost"
-                  disabled={!nav.nextSongId || isNavigating}
+                  disabled={nav.nextIndex === null}
                   aria-label="Próxima música"
-                  onClick={() => nav.nextSongId && goToSong(nav.nextSongId)}
+                  onClick={() => nav.nextIndex !== null && goToSong(nav.nextIndex)}
                 >
-                  Próxima {isNavigating ? <Loader2 className="size-4 animate-spin" /> : <ChevronRight className="size-4" />}
+                  Próxima <ChevronRight className="size-4" />
                 </Button>
               )}
             </div>

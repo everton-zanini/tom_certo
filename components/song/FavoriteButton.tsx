@@ -7,7 +7,15 @@ import { toggleFavorite } from "@/services/favorite.actions";
 import { useLoadingOverlay } from "@/components/providers/loading-overlay-provider";
 import { cn } from "@/lib/utils";
 
-export function FavoriteButton({ songId, initialFavorited }: { songId: string; initialFavorited: boolean }) {
+export function FavoriteButton({
+  songId,
+  initialFavorited,
+  onChange,
+}: {
+  songId: string;
+  initialFavorited: boolean;
+  onChange?: (favorited: boolean) => void;
+}) {
   const { runWithOverlay } = useLoadingOverlay();
   const [isPending, startTransition] = useTransition();
   const [favorited, setOptimisticFavorited] = useOptimistic(initialFavorited);
@@ -21,7 +29,8 @@ export function FavoriteButton({ songId, initialFavorited }: { songId: string; i
       onClick={() => {
         startTransition(async () => {
           setOptimisticFavorited(!favorited);
-          await runWithOverlay(() => toggleFavorite(songId), "Atualizando favorito...");
+          const result = await runWithOverlay(() => toggleFavorite(songId), "Atualizando favorito...");
+          onChange?.(result.favorited);
         });
       }}
     >

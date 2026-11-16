@@ -1,23 +1,33 @@
 "use server";
 
 import { getPlaylist } from "@/services/playlist.actions";
-import { getSongDisplayLines } from "@/services/song.actions";
-import { isFavorited } from "@/services/favorite.actions";
+import { listFavoriteSongIds } from "@/services/favorite.actions";
+import { buildDisplayLines } from "@/lib/cifra/display";
 
 /**
- * Combined fetch for the fullscreen performance view: called both for the initial
- * page load and from the client when the user jumps to the previous/next song,
- * so that navigating never unmounts the viewer (which would kick it out of fullscreen).
+ * Carrega o repertório inteiro (todas as músicas já transpostas + favoritos) numa
+ * única chamada ao abrir o modo apresentação. Anterior/Próxima passam a ser só
+ * troca de estado no cliente: sem rede, sem espera e sem desmontar o viewer
+ * (desmontar sairia da tela cheia).
  */
-export async function getPerformSongData(playlistId: string, songId: string) {
-  const playlist = await getPlaylist(playlistId);
-  const index = playlist.songs.findIndex((ps) => ps.songId === songId);
-  const [{ song, lines }, favorited] = await Promise.all([
-    getSongDisplayLines(songId, playlist.songs[index]?.tom),
-    isFavorited(songId),
-  ]);
-  const prevSongId = index > 0 ? playlist.songs[index - 1].songId : null;
-  const nextSongId = index >= 0 && index < playlist.songs.length - 1 ? playlist.songs[index + 1].songId : null;
+export async function getPerformPlaylistData(playlistId: string) {
+  const [playlist, favoriteIds] = await Promise.all([getPlaylist(playlistId), listFavoriteSongIds()]);
+  const favorites = new Set(favoriteIds);
 
-  return { song, lines, favorited, prevSongId, nextSongId };
+  return playlist.songs.map((ps) => {
+    const { song, lines } = buildDisplayLines(ps.song, ps.tom);
+    return {
+      song: {
+        id: song.id,
+        titulo: song.titulo,
+        artista: song.artista,
+        tomAtual: song.tomAtual,
+        linkYoutube: song.linkYoutube,
+      },
+      lines,
+      favorited: favorites.has(song.id),
+    };
+  });
 }
+
+export type PerformSong = Awaited<ReturnType<typeof getPerformPlaylistData>>[number];
